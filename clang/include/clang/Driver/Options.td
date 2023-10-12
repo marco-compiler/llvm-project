@@ -835,7 +835,7 @@ are searched. If the same directory is in the SYSTEM include search
 paths, for example if also specified with -isystem, the -I option
 will be ignored}]>;
 def L : JoinedOrSeparate<["-"], "L">, Flags<[RenderJoined]>, Group<Link_Group>,
-    Visibility<[ClangOption, FlangOption]>,
+    Visibility<[ClangOption, FlangOption, MarcoOption]>,
     MetaVarName<"<dir>">, HelpText<"Add directory to library search path">;
 def MD : Flag<["-"], "MD">, Group<M_Group>,
     HelpText<"Write a depfile containing user and system headers">;
@@ -4149,7 +4149,7 @@ def iquote : JoinedOrSeparate<["-"], "iquote">, Group<clang_i_Group>,
   Visibility<[ClangOption, CC1Option]>,
   HelpText<"Add directory to QUOTE include search path">, MetaVarName<"<directory>">;
 def isysroot : JoinedOrSeparate<["-"], "isysroot">, Group<clang_i_Group>,
-  Visibility<[ClangOption, CC1Option]>,
+  Visibility<[ClangOption, CC1Option, MarcoOption]>,
   HelpText<"Set the system root directory (usually /)">, MetaVarName<"<dir>">,
   MarshallingInfoString<HeaderSearchOpts<"Sysroot">, [{"/"}]>;
 def isystem : JoinedOrSeparate<["-"], "isystem">, Group<clang_i_Group>,
@@ -5321,7 +5321,7 @@ def undef : Flag<["-"], "undef">, Group<u_Group>,
 def unexported__symbols__list : Separate<["-"], "unexported_symbols_list">;
 def u : JoinedOrSeparate<["-"], "u">, Group<u_Group>;
 def v : Flag<["-"], "v">,
-  Visibility<[ClangOption, CC1Option, CLOption, DXCOption, FlangOption]>,
+  Visibility<[ClangOption, CC1Option, CLOption, DXCOption, FlangOption, MarcoOption]>,
   HelpText<"Show commands to run and use verbose output">,
   MarshallingInfoFlag<HeaderSearchOpts<"Verbose">>;
 def altivec_src_compat : Joined<["-"], "faltivec-src-compat=">,
