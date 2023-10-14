@@ -1018,6 +1018,9 @@ void tools::addMarcoLinkerArgs(
     CmdArgs.push_back("-lklu");
   }
 
+  CmdArgs.push_back("-lm");
+  CmdArgs.push_back("-lpthread");
+
   TC.AddCXXStdlibLibArgs(Args, CmdArgs);
 }
 
