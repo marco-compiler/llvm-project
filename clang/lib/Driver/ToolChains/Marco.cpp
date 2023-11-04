@@ -75,8 +75,8 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
 
   if (isa<CompileJobAction>(JA) || isa<BackendJobAction>(JA)) {
     if(JA.getType() == types::TY_Modelica) {
-      if(Args.hasArg(options::OPT_emit_modelica_flattened)) {
-        CmdArgs.push_back("-emit-flattened");
+      if(Args.hasArg(options::OPT_emit_base_modelica)) {
+        CmdArgs.push_back("-emit-base-modelica");
       } else {
         assert(false && "Unexpected output type!");
       }

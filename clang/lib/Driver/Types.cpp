@@ -176,14 +176,14 @@ bool types::isAcceptedByFlang(ID Id) {
 
 bool types::isAcceptedByMarco(ID Id) {
   switch (Id) {
-  default:
-    return false;
+    default:
+      return false;
 
-  case TY_Modelica:
-    return true;
-  case TY_LLVM_IR:
-  case TY_LLVM_BC:
-    return true;
+    case TY_Modelica:
+    case TY_BaseModelica:
+    case TY_LLVM_IR:
+    case TY_LLVM_BC:
+      return true;
   }
 }
 

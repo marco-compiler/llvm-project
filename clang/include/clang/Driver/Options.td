@@ -1391,6 +1391,10 @@ def dynamiclib : Flag<["-"], "dynamiclib">;
 def dynamic : Flag<["-"], "dynamic">, Flags<[NoArgumentUnused]>;
 def d_Flag : Flag<["-"], "d">, Group<d_Group>;
 def d_Joined : Joined<["-"], "d">, Group<d_Group>;
+def emit_base_modelica : Flag<["-"], "emit-base-modelica">,
+  Visibility<[ClangOption, MarcoOption, MC1Option]>,
+  Group<Action_Group>,
+  HelpText<"Emit Base Modelica">;
 def emit_ast : Flag<["-"], "emit-ast">,
   Visibility<[ClangOption, CLOption, DXCOption, MC1Option, MarcoOption]>,
   HelpText<"Emit Clang AST files for source inputs">;
@@ -8415,11 +8419,6 @@ defm ida_jacobian_one_sweep : BoolOption<"", "ida-jacobian-one-sweep",
 //===----------------------------------------------------------------------===//
 // Frontend Options - mc1
 //===----------------------------------------------------------------------===//
-
-def emit_modelica_flattened : Flag<["-"], "emit-flattened">,
-    Visibility<[MarcoOption, MC1Option]>,
-    Group<Action_Group>,
-    HelpText<"Emit flattened Modelica">;
 
 def emit_final_ast : Flag<["-"], "emit-final-ast">,
     Visibility<[MarcoOption, MC1Option]>,
