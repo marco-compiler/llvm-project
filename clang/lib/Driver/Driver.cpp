@@ -361,8 +361,7 @@ phases::ID Driver::getFinalPhase(const DerivedArgList &DAL,
              (PhaseArg = DAL.getLastArg(options::OPT__migrate)) ||
              (PhaseArg = DAL.getLastArg(options::OPT__analyze)) ||
              (PhaseArg = DAL.getLastArg(options::OPT_emit_base_modelica)) ||
-             (PhaseArg = DAL.getLastArg(options::OPT_emit_ast)) ||
-             (PhaseArg = DAL.getLastArg(options::OPT_emit_final_ast))
+             (PhaseArg = DAL.getLastArg(options::OPT_emit_ast))
             ) {
     FinalPhase = phases::Compile;
 
@@ -4060,7 +4059,7 @@ void Driver::BuildMarcoActions(Compilation& C, DerivedArgList& Args, const Input
 
     if (Args.hasArg(options::OPT_emit_base_modelica))
       compilationType = types::TY_BaseModelica;
-    else if(Args.hasArg(options::OPT_emit_ast) || Args.hasArg(options::OPT_emit_final_ast))
+    else if (Args.hasArg(options::OPT_emit_ast))
       compilationType = types::TY_AST;
     else
      compilationType = types::TY_LLVM_BC;

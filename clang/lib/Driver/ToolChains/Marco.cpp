@@ -75,11 +75,7 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
 
   if (isa<CompileJobAction>(JA) || isa<BackendJobAction>(JA)) {
     if (JA.getType() == types::TY_AST) {
-      if(Args.hasArg(options::OPT_emit_final_ast)) {
-        CmdArgs.push_back("-emit-final-ast");
-      } else {
-        CmdArgs.push_back("-emit-ast");
-      }
+      CmdArgs.push_back("-emit-ast");
     } else if (JA.getType() == types::TY_BaseModelica) {
       CmdArgs.push_back("-emit-base-modelica");
     } else if (JA.getType() == types::TY_LLVM_IR || JA.getType() == types::TY_LTO_IR) {

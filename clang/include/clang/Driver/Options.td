@@ -8283,10 +8283,13 @@ def dxc_entrypoint : Option<["--", "/", "-"], "E", KIND_JOINED_OR_SEPARATE>,
                      Flags<[NoXarchOption]>, Visibility<[DXCOption]>,
                      HelpText<"Entry point name">;
 
-//Marco
+//===----------------------------------------------------------------------===//
+// MARCO Driver Options
+//===----------------------------------------------------------------------===//
+
 def print_statistics : Flag<["--"], "print-statistics">,
-    Visibility<[MC1Option]>,
-    HelpText<"Print statistics">;
+    Visibility<[MarcoOption, MC1Option]>,
+    HelpText<"Print compilation statistics">;
 
 defm multithreading : BoolOption<"", "multithreading",
     MarcoCodegenOpts<"Multithreading">,
@@ -8417,13 +8420,8 @@ defm ida_jacobian_one_sweep : BoolOption<"", "ida-jacobian-one-sweep",
     Group<Simulation_Group>;
 
 //===----------------------------------------------------------------------===//
-// Frontend Options - mc1
+// MARCO Frontend (mc1) Options
 //===----------------------------------------------------------------------===//
-
-def emit_final_ast : Flag<["-"], "emit-final-ast">,
-    Visibility<[MarcoOption, MC1Option]>,
-    Group<Action_Group>,
-    HelpText<"Emit the final AST, after the frontend passes">;
 
 def dxc_validator_path_EQ : Joined<["--"], "dxv-path=">, Group<dxc_Group>,
   HelpText<"DXIL validator installation path">;
