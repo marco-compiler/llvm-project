@@ -999,6 +999,7 @@ void tools::addMarcoLinkerArgs(
   } else if (solverString == "ida") {
     CmdArgs.push_back("-lMARCORuntimeDriverIDA");
     CmdArgs.push_back("-lMARCORuntimeSolverIDA");
+    CmdArgs.push_back("-lMARCORuntimeSolverSUNDIALS");
   }
 
   // Add the remaining runtime libraries.
