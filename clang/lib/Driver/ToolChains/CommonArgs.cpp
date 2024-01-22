@@ -999,11 +999,11 @@ void tools::addMarcoLinkerArgs(
   } else if (solverString == "ida") {
     CmdArgs.push_back("-lMARCORuntimeDriverIDA");
     CmdArgs.push_back("-lMARCORuntimeSolverIDA");
-    CmdArgs.push_back("-lMARCORuntimeSolverSUNDIALS");
   }
 
   // Add the remaining runtime libraries.
   CmdArgs.push_back("-lMARCORuntimeSolverKINSOL");
+  CmdArgs.push_back("-lMARCORuntimeSolverSUNDIALS");
   CmdArgs.push_back("-lMARCORuntimePrinterCSV");
   CmdArgs.push_back("-lMARCORuntimeSupport");
   CmdArgs.push_back("-lMARCORuntimeCLI");
@@ -1013,11 +1013,12 @@ void tools::addMarcoLinkerArgs(
 
   if (solverString == "ida") {
     CmdArgs.push_back("-lsundials_ida");
-    CmdArgs.push_back("-lsundials_kinsol");
-    CmdArgs.push_back("-lsundials_nvecserial");
-    CmdArgs.push_back("-lsundials_sunlinsolklu");
-    CmdArgs.push_back("-lklu");
   }
+
+  CmdArgs.push_back("-lsundials_kinsol");
+  CmdArgs.push_back("-lsundials_nvecserial");
+  CmdArgs.push_back("-lsundials_sunlinsolklu");
+  CmdArgs.push_back("-lklu");
 
   CmdArgs.push_back("-lm");
   CmdArgs.push_back("-lpthread");
