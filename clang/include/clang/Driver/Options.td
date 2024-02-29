@@ -6233,7 +6233,7 @@ def J : JoinedOrSeparate<["-"], "J">,
 
 
 def emit_mlir : Flag<["-"], "emit-mlir">, Group<Action_Group>,
-  Visibility<[FC1Option, MC1Option]>,
+  Visibility<[FC1Option, MarcoOption, MC1Option]>,
   HelpText<"Build the parse tree, then lower it to MLIR">;
 
 //===----------------------------------------------------------------------===//
