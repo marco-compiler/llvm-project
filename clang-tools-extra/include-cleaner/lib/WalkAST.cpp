@@ -11,6 +11,7 @@
 #include "clang/AST/ASTFwd.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclFriend.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
@@ -127,6 +128,11 @@ public:
 
   bool VisitDeclRefExpr(DeclRefExpr *DRE) {
     auto *FD = DRE->getFoundDecl();
+    // Prefer the underlying decl if FoundDecl isn't a shadow decl, e.g:
+    // - For templates, found-decl is always primary template, but we want the
+    // specializaiton itself.
+    if (!llvm::isa<UsingShadowDecl>(FD))
+      FD = DRE->getDecl();
     // For refs to non-meber-like decls, use the found decl.
     // For member-like decls, we should have a reference from the qualifier to
     // the container decl instead, which is preferred as it'll handle
@@ -138,10 +144,13 @@ public:
     // If the ref is without a qualifier, and is a member, ignore it. As it is
     // available in current context due to some other construct (e.g. base
     // specifiers, using decls) that has to spell the name explicitly.
+    //
     // If it's an enum constant, it must be due to prior decl. Report references
-    // to it instead.
-    if (llvm::isa<EnumConstantDecl>(FD) && !DRE->hasQualifier())
-      report(DRE->getLocation(), FD);
+    // to it when qualifier isn't a type.
+    if (llvm::isa<EnumConstantDecl>(FD)) {
+      if (!DRE->getQualifier() || DRE->getQualifier()->getAsNamespace())
+        report(DRE->getLocation(), FD);
+    }
     return true;
   }
 
@@ -219,6 +228,11 @@ public:
     // Mark declaration from definition as it needs type-checking.
     if (FD->isThisDeclarationADefinition())
       report(FD->getLocation(), FD);
+    // Explicit specializaiton/instantiations of a function template requires
+    // primary template.
+    if (clang::isTemplateExplicitInstantiationOrSpecialization(
+            FD->getTemplateSpecializationKind()))
+      report(FD->getLocation(), FD->getPrimaryTemplate());
     return true;
   }
   bool VisitVarDecl(VarDecl *VD) {
@@ -237,6 +251,14 @@ public:
     // type-checking purposes.
     if (D->isThisDeclarationADefinition() && D->getIntegerTypeSourceInfo())
       report(D->getLocation(), D);
+    return true;
+  }
+
+  bool VisitFriendDecl(FriendDecl *D) {
+    // We already visit the TypeLoc properly, but need to special case the decl
+    // case.
+    if (auto *FD = D->getFriendDecl())
+      report(D->getLocation(), FD);
     return true;
   }
 

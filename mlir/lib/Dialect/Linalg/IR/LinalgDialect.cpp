@@ -16,6 +16,7 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/Mesh/Interfaces/ShardingInterface.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"
@@ -53,8 +54,7 @@ struct LinalgInlinerInterface : public DialectInlinerInterface {
   }
   // Handle the given inlined terminator by replacing it with a new operation
   // as necessary. Required when the region has only one block.
-  void handleTerminator(Operation *op,
-                        ArrayRef<Value> valuesToRepl) const final {}
+  void handleTerminator(Operation *op, ValueRange valuesToRepl) const final {}
 };
 
 } // namespace
@@ -119,6 +119,12 @@ void mlir::linalg::LinalgDialect::initialize() {
       >(namedStructuredOpRegionBuilders);
 
   addInterfaces<LinalgInlinerInterface>();
+
+  declarePromisedInterface<GenericOp, mesh::ShardingInterface>();
+  declarePromisedInterfaces<mesh::ShardingInterface,
+#define GET_OP_LIST
+#include "mlir/Dialect/Linalg/IR/LinalgStructuredOps.cpp.inc"
+                            >();
 }
 
 LogicalResult LinalgDialect::verifyOperationAttribute(Operation *op,

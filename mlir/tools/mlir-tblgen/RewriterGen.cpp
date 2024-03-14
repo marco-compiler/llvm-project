@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Support/IndentedOstream.h"
+#include "mlir/TableGen/Argument.h"
 #include "mlir/TableGen/Attribute.h"
 #include "mlir/TableGen/CodeGenHelpers.h"
 #include "mlir/TableGen/Format.h"
@@ -18,6 +19,7 @@
 #include "mlir/TableGen/Operator.h"
 #include "mlir/TableGen/Pattern.h"
 #include "mlir/TableGen/Predicate.h"
+#include "mlir/TableGen/Property.h"
 #include "mlir/TableGen/Type.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/SetVector.h"
@@ -878,7 +880,8 @@ void PatternEmitter::emitAttributeMatch(DagNode tree, StringRef opName,
   } else if (attr.isOptional()) {
     // For a missing attribute that is optional according to definition, we
     // should just capture a mlir::Attribute() to signal the missing state.
-    // That is precisely what getAttr() returns on missing attributes.
+    // That is precisely what getDiscardableAttr() returns on missing
+    // attributes.
   } else {
     emitMatchCheck(opName, tgfmt("tblgen_attr", &fmtCtx),
                    formatv("\"expected op '{0}' to have attribute '{1}' "
@@ -1172,9 +1175,22 @@ void PatternEmitter::emitRewriteLogic() {
       os << val << ";\n";
   }
 
+  auto processSupplementalPatterns = [&]() {
+    int numSupplementalPatterns = pattern.getNumSupplementalPatterns();
+    for (int i = 0, offset = -numSupplementalPatterns;
+         i < numSupplementalPatterns; ++i) {
+      DagNode resultTree = pattern.getSupplementalPattern(i);
+      auto val = handleResultPattern(resultTree, offset++, 0);
+      if (resultTree.isNativeCodeCall() &&
+          resultTree.getNumReturnsOfNativeCode() == 0)
+        os << val << ";\n";
+    }
+  };
+
   if (numExpectedResults == 0) {
     assert(replStartIndex >= numResultPatterns &&
            "invalid auxiliary vs. replacement pattern division!");
+    processSupplementalPatterns();
     // No result to replace. Just erase the op.
     os << "rewriter.eraseOp(op0);\n";
   } else {
@@ -1196,18 +1212,8 @@ void PatternEmitter::emitRewriteLogic() {
           "  tblgen_repl_values.push_back(v);\n}\n",
           "\n");
     }
+    processSupplementalPatterns();
     os << "\nrewriter.replaceOp(op0, tblgen_repl_values);\n";
-  }
-
-  // Process supplemtal patterns.
-  int numSupplementalPatterns = pattern.getNumSupplementalPatterns();
-  for (int i = 0, offset = -numSupplementalPatterns;
-       i < numSupplementalPatterns; ++i) {
-    DagNode resultTree = pattern.getSupplementalPattern(i);
-    auto val = handleResultPattern(resultTree, offset++, 0);
-    if (resultTree.isNativeCodeCall() &&
-        resultTree.getNumReturnsOfNativeCode() == 0)
-      os << val << ";\n";
   }
 
   LLVM_DEBUG(llvm::dbgs() << "--- done emitting rewrite logic ---\n");
@@ -1514,10 +1520,36 @@ std::string PatternEmitter::handleOpCreation(DagNode tree, int resultIndex,
   // the key. This includes both bound and unbound child nodes.
   ChildNodeIndexNameMap childNodeNames;
 
+  // If the argument is a type constraint, then its an operand. Check if the
+  // op's argument is variadic that the argument in the pattern is too.
+  auto checkIfMatchedVariadic = [&](int i) {
+    // FIXME: This does not yet check for variable/leaf case.
+    // FIXME: Change so that native code call can be handled.
+    const auto *operand =
+        llvm::dyn_cast_if_present<NamedTypeConstraint *>(resultOp.getArg(i));
+    if (!operand || !operand->isVariadic())
+      return;
+
+    auto child = tree.getArgAsNestedDag(i);
+    if (!child)
+      return;
+
+    // Skip over replaceWithValues.
+    while (child.isReplaceWithValue()) {
+      if (!(child = child.getArgAsNestedDag(0)))
+        return;
+    }
+    if (!child.isNativeCodeCall() && !child.isVariadic())
+      PrintFatalError(loc, formatv("op expects variadic operand `{0}`, while "
+                                   "provided is non-variadic",
+                                   resultOp.getArgName(i)));
+  };
+
   // First go through all the child nodes who are nested DAG constructs to
   // create ops for them and remember the symbol names for them, so that we can
   // use the results in the current node. This happens in a recursive manner.
   for (int i = 0, e = tree.getNumArgs() - tail.numDirectives; i != e; ++i) {
+    checkIfMatchedVariadic(i);
     if (auto child = tree.getArgAsNestedDag(i))
       childNodeNames[i] = handleResultPattern(child, i, depth + 1);
   }
@@ -1739,10 +1771,15 @@ void PatternEmitter::createAggregateLocalVarsForOpArgs(
       "if (auto tmpAttr = {1}) {\n"
       "  tblgen_attrs.emplace_back(rewriter.getStringAttr(\"{0}\"), "
       "tmpAttr);\n}\n";
+  int numVariadic = 0;
+  bool hasOperandSegmentSizes = false;
+  std::vector<std::string> sizes;
   for (int argIndex = 0, e = resultOp.getNumArgs(); argIndex < e; ++argIndex) {
     if (resultOp.getArg(argIndex).is<NamedAttribute *>()) {
       // The argument in the op definition.
       auto opArgName = resultOp.getArgName(argIndex);
+      hasOperandSegmentSizes =
+          hasOperandSegmentSizes || opArgName == "operandSegmentSizes";
       if (auto subTree = node.getArgAsNestedDag(argIndex)) {
         if (!subTree.isNativeCodeCall())
           PrintFatalError(loc, "only NativeCodeCall allowed in nested dag node "
@@ -1762,6 +1799,7 @@ void PatternEmitter::createAggregateLocalVarsForOpArgs(
         resultOp.getArg(argIndex).get<NamedTypeConstraint *>();
     std::string varName;
     if (operand->isVariadic()) {
+      ++numVariadic;
       std::string range;
       if (node.isNestedDagArg(argIndex)) {
         range = childNodeNames.lookup(argIndex);
@@ -1773,7 +1811,9 @@ void PatternEmitter::createAggregateLocalVarsForOpArgs(
       range = symbolInfoMap.getValueAndRangeUse(range);
       os << formatv("for (auto v: {0}) {{\n  tblgen_values.push_back(v);\n}\n",
                     range);
+      sizes.push_back(formatv("static_cast<int32_t>({0}.size())", range));
     } else {
+      sizes.emplace_back("1");
       os << formatv("tblgen_values.push_back(");
       if (node.isNestedDagArg(argIndex)) {
         os << symbolInfoMap.getValueAndRangeUse(
@@ -1798,6 +1838,19 @@ void PatternEmitter::createAggregateLocalVarsForOpArgs(
         }
       }
       os << ");\n";
+    }
+  }
+
+  if (numVariadic > 1 && !hasOperandSegmentSizes) {
+    // Only set size if it can't be computed.
+    const auto *sameVariadicSize =
+        resultOp.getTrait("::mlir::OpTrait::SameVariadicOperandSize");
+    if (!sameVariadicSize) {
+      const char *setSizes = R"(
+        tblgen_attrs.emplace_back(rewriter.getStringAttr("operandSegmentSizes"),
+          rewriter.getDenseI32ArrayAttr({{ {0} }));
+          )";
+      os.printReindented(formatv(setSizes, llvm::join(sizes, ", ")).str());
     }
   }
 }
@@ -1869,7 +1922,7 @@ StringRef StaticMatcherHelper::getVerifierName(DagLeaf leaf) {
 }
 
 static void emitRewriters(const RecordKeeper &recordKeeper, raw_ostream &os) {
-  emitSourceFileHeader("Rewriters", os);
+  emitSourceFileHeader("Rewriters", os, recordKeeper);
 
   const auto &patterns = recordKeeper.getAllDerivedDefinitions("Pattern");
 

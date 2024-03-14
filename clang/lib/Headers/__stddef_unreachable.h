@@ -7,7 +7,11 @@
  *===-----------------------------------------------------------------------===
  */
 
-#if !defined(unreachable) || __has_feature(modules)
-/* Always define unreachable when modules are available. */
+/*
+ * When -fbuiltin-headers-in-system-modules is set this is a non-modular header
+ * and needs to behave as if it was textual.
+ */
+#if !defined(unreachable) ||                                                   \
+    (__has_feature(modules) && !__building_module(_Builtin_stddef))
 #define unreachable() __builtin_unreachable()
 #endif

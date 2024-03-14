@@ -9,8 +9,9 @@
 #ifndef LLVM_LIBC_UTILS_GPU_LOADER_LOADER_H
 #define LLVM_LIBC_UTILS_GPU_LOADER_LOADER_H
 
-#include "utils/gpu/server/rpc_server.h"
+#include "utils/gpu/server/llvmlibc_rpc_server.h"
 
+#include "llvm-libc-types/rpc_opcodes_t.h"
 #include "include/llvm-libc-types/test_rpc_opcodes_t.h"
 
 #include <cstddef>
@@ -34,7 +35,6 @@ struct begin_args_t {
   int argc;
   void *argv;
   void *envp;
-  void *rpc_shared_buffer;
 };
 
 /// The arguments to the '_start' kernel.
@@ -86,7 +86,7 @@ void *copy_argument_vector(int argc, char **argv, Allocator alloc) {
   // Ensure the vector is null terminated.
   reinterpret_cast<void **>(dev_argv)[argv_size] = nullptr;
   return dev_argv;
-};
+}
 
 /// Copy the system's environment to GPU memory allocated using \p alloc.
 template <typename Allocator>
@@ -96,7 +96,7 @@ void *copy_environment(char **envp, Allocator alloc) {
     ++envc;
 
   return copy_argument_vector(envc, envp, alloc);
-};
+}
 
 inline void handle_error(const char *msg) {
   fprintf(stderr, "%s\n", msg);

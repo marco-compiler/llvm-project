@@ -43,6 +43,7 @@ enum class Language : uint8_t {
   HLSL,
   ///@}
 };
+StringRef languageToString(Language L);
 
 enum LangFeatures {
   LineComment = (1 << 0),
@@ -138,6 +139,7 @@ public:
   bool isOpenCL() const { return Flags & OpenCL; }
 
   static Kind getLangKind(StringRef Name);
+  static Kind getHLSLLangKind(StringRef Name);
   static const LangStandard &getLangStandardForKind(Kind K);
   static const LangStandard *getLangStandardForName(StringRef Name);
 };

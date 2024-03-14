@@ -40,6 +40,11 @@ class TimerGroup;
 namespace clang {
 class ASTContext;
 class ASTReader;
+
+namespace serialization {
+class ModuleFile;
+}
+
 class CodeCompleteConsumer;
 class DiagnosticsEngine;
 class DiagnosticConsumer;
@@ -220,6 +225,9 @@ public:
   // of the context or else not CompilerInstance specific.
   bool ExecuteAction(FrontendAction &Act);
 
+  /// At the end of a compilation, print the number of warnings/errors.
+  void printDiagnosticStats();
+
   /// Load the list of plugins requested in the \c FrontendOptions.
   void LoadRequestedPlugins();
 
@@ -299,8 +307,16 @@ public:
     return Invocation->getHeaderSearchOptsPtr();
   }
 
+  APINotesOptions &getAPINotesOpts() { return Invocation->getAPINotesOpts(); }
+  const APINotesOptions &getAPINotesOpts() const {
+    return Invocation->getAPINotesOpts();
+  }
+
   LangOptions &getLangOpts() { return Invocation->getLangOpts(); }
   const LangOptions &getLangOpts() const { return Invocation->getLangOpts(); }
+  std::shared_ptr<LangOptions> getLangOptsPtr() const {
+    return Invocation->getLangOptsPtr();
+  }
 
   PreprocessorOptions &getPreprocessorOpts() {
     return Invocation->getPreprocessorOpts();
@@ -794,7 +810,8 @@ public:
 
   void createASTReader();
 
-  bool loadModuleFile(StringRef FileName);
+  bool loadModuleFile(StringRef FileName,
+                      serialization::ModuleFile *&LoadedModuleFile);
 
 private:
   /// Find a module, potentially compiling it, before reading its AST.  This is

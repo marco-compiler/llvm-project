@@ -13,10 +13,16 @@
 // iter_type put(iter_type s, ios_base& iob, char_type fill, long double v) const;
 
 // XFAIL: win32-broken-printf-g-precision
+// XFAIL: LIBCXX-PICOLIBC-FIXME
+
+// Needs more investigation, but this is probably failing on Android M (API 23)
+// and up because the printf formatting of NAN changed.
+// XFAIL: LIBCXX-ANDROID-FIXME && !android-device-api={{21|22}}
 
 #include <locale>
 #include <ios>
 #include <cassert>
+#include <cstdio>
 #include <streambuf>
 #include <cmath>
 #include "test_macros.h"
@@ -8929,11 +8935,12 @@ void test4()
     char str[200];
     std::locale lc = std::locale::classic();
     std::locale lg(lc, new my_numpunct);
-#ifdef _AIX
-    std::string inf = "INF";
-#else
-    std::string inf = "inf";
-#endif
+
+    std::string inf;
+
+    // This should match the underlying C library
+    std::sprintf(str, "%f", INFINITY);
+    inf = str;
 
     const my_facet f(1);
     {
@@ -10722,24 +10729,27 @@ void test5()
     std::locale lc = std::locale::classic();
     std::locale lg(lc, new my_numpunct);
     const my_facet f(1);
-#if defined(_AIX)
-    std::string nan= "NaNQ";
-    std::string NaN = "NaNQ";
-    std::string nan_padding25 = "*********************";
-    std::string pnan_sign = "+";
-    std::string pnan_padding25 = "********************";
-#else
-    std::string nan= "nan";
-    std::string NaN = "NAN";
-    std::string nan_padding25 = "**********************";
-#if defined(TEST_HAS_GLIBC) || defined(_WIN32)
-    std::string pnan_sign = "+";
-    std::string pnan_padding25 = "*********************";
-#else
-    std::string pnan_sign = "";
-    std::string pnan_padding25 = "**********************";
-#endif
-#endif
+
+    std::string nan;
+    std::string NaN;
+    std::string pnan_sign;
+
+    // The output here depends on the underlying C library, so work out what
+    // that does.
+    std::sprintf(str, "%f", std::nan(""));
+    nan = str;
+
+    std::sprintf(str, "%F", std::nan(""));
+    NaN = str;
+
+    std::sprintf(str, "%+f", std::nan(""));
+    if (str[0] == '+') {
+      pnan_sign = "+";
+    }
+
+    std::string nan_padding25  = std::string(25 - nan.length(), '*');
+    std::string pnan_padding25 = std::string(25 - nan.length() - pnan_sign.length(), '*');
+
     {
         long double v = std::nan("");
         std::ios ios(0);

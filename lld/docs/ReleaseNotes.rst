@@ -26,10 +26,9 @@ Non-comprehensive list of changes in this release
 ELF Improvements
 ----------------
 
-* ``--fat-lto-objects`` option is added to support LLVM FatLTO.
-  Without ``--fat-lto-objects``, LLD will link LLVM FatLTO objects using the
-  relocatable object file. (`D146778 <https://reviews.llvm.org/D146778>`_)
-
+* ``--compress-sections <section-glib>=[none|zlib|zstd]`` is added to compress
+  matched output sections without the ``SHF_ALLOC`` flag.
+  (`#84855 <https://github.com/llvm/llvm-project/pull/84855>`_)
 
 Breaking changes
 ----------------

@@ -128,9 +128,7 @@ static InstructionListType createIncMemory(MCPhysReg RegTo, MCPhysReg RegTmp) {
 }
 class AArch64MCPlusBuilder : public MCPlusBuilder {
 public:
-  AArch64MCPlusBuilder(const MCInstrAnalysis *Analysis, const MCInstrInfo *Info,
-                       const MCRegisterInfo *RegInfo)
-      : MCPlusBuilder(Analysis, Info, RegInfo) {}
+  using MCPlusBuilder::MCPlusBuilder;
 
   bool equals(const MCTargetExpr &A, const MCTargetExpr &B,
               CompFuncTy Comp) const override {
@@ -272,6 +270,40 @@ public:
     return isLDRB(Inst) || isLDRH(Inst) || isLDRW(Inst) || isLDRX(Inst);
   }
 
+  bool isAArch64ExclusiveLoad(const MCInst &Inst) const override {
+    return (Inst.getOpcode() == AArch64::LDXPX ||
+            Inst.getOpcode() == AArch64::LDXPW ||
+            Inst.getOpcode() == AArch64::LDXRX ||
+            Inst.getOpcode() == AArch64::LDXRW ||
+            Inst.getOpcode() == AArch64::LDXRH ||
+            Inst.getOpcode() == AArch64::LDXRB ||
+            Inst.getOpcode() == AArch64::LDAXPX ||
+            Inst.getOpcode() == AArch64::LDAXPW ||
+            Inst.getOpcode() == AArch64::LDAXRX ||
+            Inst.getOpcode() == AArch64::LDAXRW ||
+            Inst.getOpcode() == AArch64::LDAXRH ||
+            Inst.getOpcode() == AArch64::LDAXRB);
+  }
+
+  bool isAArch64ExclusiveStore(const MCInst &Inst) const override {
+    return (Inst.getOpcode() == AArch64::STXPX ||
+            Inst.getOpcode() == AArch64::STXPW ||
+            Inst.getOpcode() == AArch64::STXRX ||
+            Inst.getOpcode() == AArch64::STXRW ||
+            Inst.getOpcode() == AArch64::STXRH ||
+            Inst.getOpcode() == AArch64::STXRB ||
+            Inst.getOpcode() == AArch64::STLXPX ||
+            Inst.getOpcode() == AArch64::STLXPW ||
+            Inst.getOpcode() == AArch64::STLXRX ||
+            Inst.getOpcode() == AArch64::STLXRW ||
+            Inst.getOpcode() == AArch64::STLXRH ||
+            Inst.getOpcode() == AArch64::STLXRB);
+  }
+
+  bool isAArch64ExclusiveClear(const MCInst &Inst) const override {
+    return (Inst.getOpcode() == AArch64::CLREX);
+  }
+
   bool isLoadFromStack(const MCInst &Inst) const {
     if (!mayLoad(Inst))
       return false;
@@ -288,6 +320,12 @@ public:
 
   bool isRegToRegMove(const MCInst &Inst, MCPhysReg &From,
                       MCPhysReg &To) const override {
+    if (Inst.getOpcode() == AArch64::FMOVDXr) {
+      From = Inst.getOperand(1).getReg();
+      To = Inst.getOperand(0).getReg();
+      return true;
+    }
+
     if (Inst.getOpcode() != AArch64::ORRXrs)
       return false;
     if (Inst.getOperand(1).getReg() != AArch64::XZR)
@@ -441,6 +479,22 @@ public:
     MCInst::iterator OI = getMemOperandDisp(Inst);
     *OI = Operand;
     return true;
+  }
+
+  void getCalleeSavedRegs(BitVector &Regs) const override {
+    Regs |= getAliases(AArch64::X18);
+    Regs |= getAliases(AArch64::X19);
+    Regs |= getAliases(AArch64::X20);
+    Regs |= getAliases(AArch64::X21);
+    Regs |= getAliases(AArch64::X22);
+    Regs |= getAliases(AArch64::X23);
+    Regs |= getAliases(AArch64::X24);
+    Regs |= getAliases(AArch64::X25);
+    Regs |= getAliases(AArch64::X26);
+    Regs |= getAliases(AArch64::X27);
+    Regs |= getAliases(AArch64::X28);
+    Regs |= getAliases(AArch64::LR);
+    Regs |= getAliases(AArch64::FP);
   }
 
   const MCExpr *getTargetExprFor(MCInst &Inst, const MCExpr *Expr,
@@ -819,6 +873,14 @@ public:
   ///    ldr     x17, [x16, #3040]
   ///    add     x16, x16, #0xbe0
   ///    br      x17
+  ///
+  ///  The other type of trampolines are located in .plt.got, that are used for
+  ///  non-lazy bindings so doesn't use x16 arg to transfer .got entry address:
+  ///
+  ///    adrp    x16, 230000
+  ///    ldr     x17, [x16, #3040]
+  ///    br      x17
+  ///    nop
   ///
   uint64_t analyzePLTEntry(MCInst &Instruction, InstructionIterator Begin,
                            InstructionIterator End,
@@ -1567,6 +1629,9 @@ public:
     uint64_t RelType;
     if (Fixup.getKind() == MCFixupKind(AArch64::fixup_aarch64_pcrel_call26))
       RelType = ELF::R_AARCH64_CALL26;
+    else if (Fixup.getKind() ==
+             MCFixupKind(AArch64::fixup_aarch64_pcrel_branch26))
+      RelType = ELF::R_AARCH64_JUMP26;
     else if (FKI.Flags & MCFixupKindInfo::FKF_IsPCRel) {
       switch (FKI.TargetSize) {
       default:
@@ -1601,6 +1666,8 @@ public:
 
     return Relocation({RelOffset, RelSymbol, RelType, RelAddend, 0});
   }
+
+  uint16_t getMinFunctionAlignment() const override { return 4; }
 };
 
 } // end anonymous namespace
@@ -1610,8 +1677,9 @@ namespace bolt {
 
 MCPlusBuilder *createAArch64MCPlusBuilder(const MCInstrAnalysis *Analysis,
                                           const MCInstrInfo *Info,
-                                          const MCRegisterInfo *RegInfo) {
-  return new AArch64MCPlusBuilder(Analysis, Info, RegInfo);
+                                          const MCRegisterInfo *RegInfo,
+                                          const MCSubtargetInfo *STI) {
+  return new AArch64MCPlusBuilder(Analysis, Info, RegInfo, STI);
 }
 
 } // namespace bolt

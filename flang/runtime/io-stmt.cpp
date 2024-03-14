@@ -119,9 +119,6 @@ template <Direction DIR> void InternalIoStatementState<DIR>::BackspaceRecord() {
 }
 
 template <Direction DIR> int InternalIoStatementState<DIR>::EndIoStatement() {
-  if constexpr (DIR == Direction::Output) {
-    unit_.EndIoStatement(); // fill
-  }
   auto result{IoStatementBase::EndIoStatement()};
   if (free_) {
     FreeMemory(this);
@@ -165,7 +162,8 @@ template <Direction DIR, typename CHAR>
 void InternalFormattedIoStatementState<DIR, CHAR>::CompleteOperation() {
   if (!this->completedOperation()) {
     if constexpr (DIR == Direction::Output) {
-      format_.Finish(*this); // ignore any remaining input positioning actions
+      format_.Finish(*this);
+      unit_.AdvanceRecord(*this);
     }
     IoStatementBase::CompleteOperation();
   }
@@ -188,6 +186,30 @@ InternalListIoStatementState<DIR>::InternalListIoStatementState(
     const Descriptor &d, const char *sourceFile, int sourceLine)
     : InternalIoStatementState<DIR>{d, sourceFile, sourceLine},
       ioStatementState_{*this} {}
+
+template <Direction DIR>
+void InternalListIoStatementState<DIR>::CompleteOperation() {
+  if (!this->completedOperation()) {
+    if constexpr (DIR == Direction::Output) {
+      if (unit_.furthestPositionInRecord > 0) {
+        unit_.AdvanceRecord(*this);
+      }
+    }
+    IoStatementBase::CompleteOperation();
+  }
+}
+
+template <Direction DIR>
+int InternalListIoStatementState<DIR>::EndIoStatement() {
+  CompleteOperation();
+  if constexpr (DIR == Direction::Input) {
+    if (int status{ListDirectedStatementState<DIR>::EndIoStatement()};
+        status != IostatOk) {
+      return status;
+    }
+  }
+  return InternalIoStatementState<DIR>::EndIoStatement();
+}
 
 ExternalIoStatementBase::ExternalIoStatementBase(
     ExternalFileUnit &unit, const char *sourceFile, int sourceLine)
@@ -248,8 +270,10 @@ void OpenStatementState::CompleteOperation() {
   }
   if (path_.get() || wasExtant_ ||
       (status_ && *status_ == OpenStatus::Scratch)) {
-    unit().OpenUnit(status_, action_, position_.value_or(Position::AsIs),
-        std::move(path_), pathLength_, convert_, *this);
+    if (unit().OpenUnit(status_, action_, position_.value_or(Position::AsIs),
+            std::move(path_), pathLength_, convert_, *this)) {
+      wasExtant_ = false; // existing unit was closed
+    }
   } else {
     unit().OpenAnonymousUnit(
         status_, action_, position_.value_or(Position::AsIs), convert_, *this);
@@ -567,6 +591,12 @@ std::optional<char32_t> IoStatementState::NextInField(
         case '*':
         case '\n': // for stream access
           return std::nullopt;
+        case '&':
+        case '$':
+          if (edit.IsNamelist()) {
+            return std::nullopt;
+          }
+          break;
         case ',':
           if (!(edit.modes.editingFlags & decimalComma)) {
             return std::nullopt;
@@ -679,9 +709,6 @@ void FormattedIoStatementState<Direction::Input>::GotChar(int n) {
 
 bool ListDirectedStatementState<Direction::Output>::EmitLeadingSpaceOrAdvance(
     IoStatementState &io, std::size_t length, bool isCharacter) {
-  if (length == 0) {
-    return true;
-  }
   const ConnectionState &connection{io.GetConnectionState()};
   int space{connection.positionInRecord == 0 ||
       !(isCharacter && lastWasUndelimitedCharacter())};
@@ -703,6 +730,13 @@ ListDirectedStatementState<Direction::Output>::GetNextDataEdit(
   edit.repeat = maxRepeat;
   edit.modes = io.mutableModes();
   return edit;
+}
+
+int ListDirectedStatementState<Direction::Input>::EndIoStatement() {
+  if (repeatPosition_) {
+    repeatPosition_->Cancel();
+  }
+  return IostatOk;
 }
 
 std::optional<DataEdit>
@@ -817,6 +851,17 @@ ListDirectedStatementState<Direction::Input>::GetNextDataEdit(
 }
 
 template <Direction DIR>
+int ExternalListIoStatementState<DIR>::EndIoStatement() {
+  if constexpr (DIR == Direction::Input) {
+    if (auto status{ListDirectedStatementState<DIR>::EndIoStatement()};
+        status != IostatOk) {
+      return status;
+    }
+  }
+  return ExternalIoStatementState<DIR>::EndIoStatement();
+}
+
+template <Direction DIR>
 bool ExternalUnformattedIoStatementState<DIR>::Receive(
     char *data, std::size_t bytes, std::size_t elementBytes) {
   if constexpr (DIR == Direction::Output) {
@@ -906,6 +951,16 @@ template <Direction DIR>
 bool ChildUnformattedIoStatementState<DIR>::Receive(
     char *data, std::size_t bytes, std::size_t elementBytes) {
   return this->child().parent().Receive(data, bytes, elementBytes);
+}
+
+template <Direction DIR> int ChildListIoStatementState<DIR>::EndIoStatement() {
+  if constexpr (DIR == Direction::Input) {
+    if (int status{ListDirectedStatementState<DIR>::EndIoStatement()};
+        status != IostatOk) {
+      return status;
+    }
+  }
+  return ChildIoStatementState<DIR>::EndIoStatement();
 }
 
 template class InternalIoStatementState<Direction::Output>;
@@ -1217,6 +1272,7 @@ bool InquireUnitState::Inquire(
   case HashInquiryKeyword("SIZE"):
     result = -1;
     if (unit().IsConnected()) {
+      unit().FlushOutput(*this);
       if (auto size{unit().knownSize()}) {
         result = *size;
       }
@@ -1271,7 +1327,7 @@ bool InquireNoUnitState::Inquire(
 bool InquireNoUnitState::Inquire(InquiryKeywordHash inquiry, bool &result) {
   switch (inquiry) {
   case HashInquiryKeyword("EXIST"):
-    result = true;
+    result = badUnitNumber() >= 0;
     return true;
   case HashInquiryKeyword("NAMED"):
   case HashInquiryKeyword("OPENED"):
@@ -1344,7 +1400,7 @@ bool InquireUnconnectedFileState::Inquire(
   case HashInquiryKeyword("SEQUENTIAL"):
   case HashInquiryKeyword("STREAM"):
   case HashInquiryKeyword("UNFORMATTED"):
-    str = "UNKNONN";
+    str = "UNKNOWN";
     break;
   case HashInquiryKeyword("READ"):
     str =
