@@ -23,7 +23,7 @@ using namespace llvm::opt;
 
 void Marco::addMarcoOptions(const ArgList &Args,
                                      ArgStringList &CmdArgs) const {
-    Args.AddAllArgs(
+  Args.addAllArgs(
       CmdArgs,
       {
         options::OPT_g_Flag,
