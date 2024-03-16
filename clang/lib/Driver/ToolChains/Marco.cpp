@@ -57,7 +57,8 @@ void Marco::addMarcoOptions(const ArgList &Args,
         options::OPT_no_ida_reduced_derivatives,
         options::OPT_ida_jacobian_one_sweep,
         options::OPT_no_ida_jacobian_one_sweep,
-        options::OPT_init_only
+        options::OPT_init_only,
+        options::OPT_print_statistics
      }
     );
 }
