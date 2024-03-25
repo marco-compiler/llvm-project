@@ -58,7 +58,9 @@ void Marco::addMarcoOptions(const ArgList &Args,
         options::OPT_ida_jacobian_one_sweep,
         options::OPT_no_ida_jacobian_one_sweep,
         options::OPT_init_only,
-        options::OPT_print_statistics
+        options::OPT_print_statistics,
+        options::OPT_multithreading,
+        options::OPT_no_multithreading
      }
     );
 }
