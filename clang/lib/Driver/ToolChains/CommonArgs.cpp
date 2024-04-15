@@ -1394,6 +1394,10 @@ void tools::addMarcoLinkerArgs(
   CmdArgs.push_back("-lsundials_sunlinsolklu");
   CmdArgs.push_back("-lklu");
 
+  // Utility functions provided by MLIR.
+  CmdArgs.push_back("-lmlir_c_runner_utils");
+
+  // Standard libraries.
   CmdArgs.push_back("-lm");
   CmdArgs.push_back("-lpthread");
 
