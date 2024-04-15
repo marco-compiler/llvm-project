@@ -43,6 +43,8 @@ void Marco::addMarcoOptions(const ArgList &Args,
         options::OPT_no_variables_to_parameters_promotion,
         options::OPT_cse,
         options::OPT_no_cse,
+        options::OPT_equations_runtime_scheduling,
+        options::OPT_no_equations_runtime_scheduling,
         options::OPT_omp,
         options::OPT_no_omp,
         options::OPT_O,
@@ -58,7 +60,9 @@ void Marco::addMarcoOptions(const ArgList &Args,
         options::OPT_ida_jacobian_one_sweep,
         options::OPT_no_ida_jacobian_one_sweep,
         options::OPT_init_only,
-        options::OPT_print_statistics
+        options::OPT_print_statistics,
+        options::OPT_multithreading,
+        options::OPT_no_multithreading
      }
     );
 }

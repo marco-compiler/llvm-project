@@ -8710,6 +8710,14 @@ defm cse : BoolOption<"", "cse",
     BothFlags<[], [MarcoOption, MC1Option], " common subexpression elimination">>,
     Group<MarcoCodegen_Group>;
 
+defm equations_runtime_scheduling : BoolOption<"", "equations-runtime-scheduling",
+    MarcoCodegenOpts<"Equations runtime scheduling">,
+    DefaultFalse,
+    PosFlag<SetTrue, [], [], "Enable">,
+    NegFlag<SetFalse, [], [], "Disable">,
+    BothFlags<[], [MarcoOption, MC1Option], " equations runtime scheduling">>,
+    Group<MarcoCodegen_Group>;
+
 defm omp : BoolOption<"", "omp",
     MarcoCodegenOpts<"OpenMP">,
     DefaultFalse,
