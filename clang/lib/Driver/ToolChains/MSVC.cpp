@@ -139,7 +139,7 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("/subsystem:console");
   }
 
-  if(getToolChain().getDriver().isMarcoMode()) {
+  if (getToolChain().getDriver().IsMarcoMode()) {
     addMarcoLinkerArgs(TC, Args, CmdArgs);
   }
 

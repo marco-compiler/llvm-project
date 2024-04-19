@@ -83,6 +83,12 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("-emit-ast");
     } else if (JA.getType() == types::TY_BaseModelica) {
       CmdArgs.push_back("-emit-base-modelica");
+    } else if (JA.getType() == types::TY_MLIR) {
+      CmdArgs.push_back("-emit-mlir");
+    } else if (JA.getType() == types::TY_MLIR_Modelica) {
+      CmdArgs.push_back("-emit-mlir-modelica");
+    } else if (JA.getType() == types::TY_MLIR_LLVM) {
+      CmdArgs.push_back("-emit-mlir-llvm");
     } else if (JA.getType() == types::TY_LLVM_IR || JA.getType() == types::TY_LTO_IR) {
       CmdArgs.push_back("-emit-llvm");
     } else if (JA.getType() == types::TY_LLVM_BC || JA.getType() == types::TY_LTO_BC) {

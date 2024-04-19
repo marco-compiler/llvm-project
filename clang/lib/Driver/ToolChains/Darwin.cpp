@@ -685,7 +685,7 @@ void darwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     addFortranRuntimeLibs(getToolChain(), Args, CmdArgs);
   }
 
-  if(getToolChain().getDriver().isMarcoMode()) {
+  if (getToolChain().getDriver().IsMarcoMode()) {
     addMarcoLinkerArgs(getToolChain(), Args, CmdArgs);
   }
 

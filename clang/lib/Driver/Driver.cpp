@@ -360,8 +360,11 @@ phases::ID Driver::getFinalPhase(const DerivedArgList &DAL,
              (PhaseArg = DAL.getLastArg(options::OPT_rewrite_legacy_objc)) ||
              (PhaseArg = DAL.getLastArg(options::OPT__migrate)) ||
              (PhaseArg = DAL.getLastArg(options::OPT__analyze)) ||
+             (PhaseArg = DAL.getLastArg(options::OPT_emit_ast)) ||
              (PhaseArg = DAL.getLastArg(options::OPT_emit_base_modelica)) ||
-             (PhaseArg = DAL.getLastArg(options::OPT_emit_ast))
+             (PhaseArg = DAL.getLastArg(options::OPT_emit_mlir)) ||
+             (PhaseArg = DAL.getLastArg(options::OPT_emit_mlir_modelica)) ||
+             (PhaseArg = DAL.getLastArg(options::OPT_emit_mlir_llvm))
             ) {
     FinalPhase = phases::Compile;
 
@@ -1984,7 +1987,7 @@ void Driver::PrintHelp(bool ShowHidden) const {
 void Driver::PrintVersion(const Compilation &C, raw_ostream &OS) const {
   if (IsFlangMode()) {
     OS << getClangToolFullVersion("flang-new") << '\n';
-  } else if (isMarcoMode()) {
+  } else if (IsMarcoMode()) {
     OS << getClangToolFullVersion("marco") << '\n';
   } else {
     // FIXME: The following handlers should use a callback mechanism, we don't
@@ -2035,7 +2038,7 @@ void Driver::HandleAutocompletions(StringRef PassedFlags) const {
   if (IsFlangMode())
     VisibilityMask = llvm::opt::Visibility(options::FlangOption);
 
-  if (isMarcoMode())
+  if (IsMarcoMode())
     VisibilityMask = llvm::opt::Visibility(options::MarcoOption);
 
   // Distinguish "--autocomplete=-someflag" and "--autocomplete=-someflag,"
@@ -2663,6 +2666,8 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
         if (memcmp(Value, "-", 2) == 0) {
           if (IsFlangMode()) {
             Ty = types::TY_Fortran;
+          } else if (IsMarcoMode()) {
+            Ty = types::TY_Modelica;
           } else if (IsDXCMode()) {
             Ty = types::TY_HLSL;
           } else {
@@ -3969,9 +3974,20 @@ void Driver::handleArguments(Compilation &C, DerivedArgList &Args,
       Args.AddFlagArg(nullptr,
                       getOpts().getOption(options::OPT_frtlib_add_rpath));
     }
-    // Emitting LLVM while linking disabled except in HIPAMD Toolchain
+
+    // Emitting MLIR or LLVM while linking disabled except in HIPAMD Toolchain
+    if (Args.hasArg(options::OPT_emit_mlir))
+      Diag(clang::diag::err_drv_emit_mlir_link);
+
+    if (Args.hasArg(options::OPT_emit_mlir_modelica))
+      Diag(clang::diag::err_drv_emit_mlir_modelica_link);
+
+    if (Args.hasArg(options::OPT_emit_mlir_llvm))
+      Diag(clang::diag::err_drv_emit_mlir_llvm_link);
+
     if (Args.hasArg(options::OPT_emit_llvm) && !Args.hasArg(options::OPT_hip_link))
       Diag(clang::diag::err_drv_emit_llvm_link);
+
     if (IsCLMode() && LTOMode != LTOK_None &&
         !Args.getLastArgValue(options::OPT_fuse_ld_EQ)
              .equals_insensitive("lld"))
@@ -4090,7 +4106,7 @@ void Driver::BuildMarcoActions(Compilation& C, DerivedArgList& Args, const Input
     // Build the pipeline for this file.
     Action *Current = C.MakeAction<InputAction>(*InputArg, InputType);
 
-    if(InputType == types::TY_Modelica) {
+    if (InputType == types::TY_Modelica) {
       ModelicaMergerInputs.push_back(Current);
     }
   }
@@ -4104,6 +4120,12 @@ void Driver::BuildMarcoActions(Compilation& C, DerivedArgList& Args, const Input
       compilationType = types::TY_BaseModelica;
     } else if (Args.hasArg(options::OPT_emit_ast)) {
       compilationType = types::TY_AST;
+    } else if (Args.hasArg(options::OPT_emit_mlir)) {
+      compilationType = types::TY_MLIR;
+    } else if (Args.hasArg(options::OPT_emit_mlir_modelica)) {
+      compilationType = types::TY_MLIR_Modelica;
+    } else if (Args.hasArg(options::OPT_emit_mlir_llvm)) {
+      compilationType = types::TY_MLIR_LLVM;
     } else {
       compilationType = types::TY_LLVM_BC;
     }
@@ -4854,6 +4876,14 @@ Action *Driver::ConstructPhaseAction(
       return C.MakeAction<CompileJobAction>(Input, types::TY_ModuleFile);
     if (Args.hasArg(options::OPT_verify_pch))
       return C.MakeAction<VerifyPCHJobAction>(Input, types::TY_Nothing);
+    if (Args.hasArg(options::OPT_emit_base_modelica))
+      return C.MakeAction<CompileJobAction>(Input, types::TY_BaseModelica);
+    if (Args.hasArg(options::OPT_emit_mlir))
+      return C.MakeAction<CompileJobAction>(Input, types::TY_MLIR);
+    if (Args.hasArg(options::OPT_emit_mlir_modelica))
+      return C.MakeAction<CompileJobAction>(Input, types::TY_MLIR_Modelica);
+    if (Args.hasArg(options::OPT_emit_mlir_llvm))
+      return C.MakeAction<CompileJobAction>(Input, types::TY_MLIR_LLVM);
     if (Args.hasArg(options::OPT_extract_api))
       return C.MakeAction<ExtractAPIJobAction>(Input, types::TY_API_INFO);
     return C.MakeAction<CompileJobAction>(Input, types::TY_LLVM_BC);
@@ -6650,7 +6680,7 @@ Driver::getOptionVisibilityMask(bool UseDriverMode) const {
   if (IsFlangMode())  {
     return llvm::opt::Visibility(options::FlangOption);
   }
-  if (isMarcoMode())  {
+  if (IsMarcoMode())  {
     return llvm::opt::Visibility(options::MarcoOption);
   }
   return llvm::opt::Visibility(options::ClangOption);

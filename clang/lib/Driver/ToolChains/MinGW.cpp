@@ -255,7 +255,7 @@ void tools::MinGW::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     addFortranRuntimeLibs(TC, Args, CmdArgs);
   }
 
-  if(getToolChain().getDriver().isMarcoMode()) {
+  if (getToolChain().getDriver().IsMarcoMode()) {
     addMarcoLinkerArgs(TC, Args, CmdArgs);
   }
 

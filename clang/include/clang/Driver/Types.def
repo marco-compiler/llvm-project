@@ -112,5 +112,8 @@ TYPE("api-information",          API_INFO,     INVALID,         "json",   phases
 TYPE("dx-container",             DX_CONTAINER, INVALID,         "dxo",    phases::Compile, phases::Backend)
 TYPE("none",                     Nothing,      INVALID,         nullptr,  phases::Compile, phases::Backend, phases::Assemble, phases::Link)
 
-TYPE("modelica",                 Modelica,     INVALID,         ".mo",    phases::Compile, phases::Backend, phases::Assemble, phases::Link)
-TYPE("base-modelica",            BaseModelica, INVALID,         ".bmo",   phases::Compile, phases::Backend, phases::Assemble, phases::Link)
+TYPE("modelica",                 Modelica,      INVALID,        "mo",        phases::Compile, phases::Backend, phases::Assemble, phases::Link)
+TYPE("base-modelica",            BaseModelica,  INVALID,        "bmo",       phases::Compile, phases::Backend, phases::Assemble, phases::Link)
+TYPE("mlir",                     MLIR,          INVALID,        "mlir",      phases::Compile, phases::Backend, phases::Assemble, phases::Link)
+TYPE("mlir-modelica",            MLIR_Modelica, INVALID,        "mo.mlir",   phases::Compile, phases::Backend, phases::Assemble, phases::Link)
+TYPE("mlir-llvm",                MLIR_LLVM,     INVALID,        "llvm.mlir", phases::Compile, phases::Backend, phases::Assemble, phases::Link)

@@ -1504,17 +1504,6 @@ def dynamiclib : Flag<["-"], "dynamiclib">;
 def dynamic : Flag<["-"], "dynamic">, Flags<[NoArgumentUnused]>;
 def d_Flag : Flag<["-"], "d">, Group<d_Group>;
 def d_Joined : Joined<["-"], "d">, Group<d_Group>;
-def emit_base_modelica : Flag<["-"], "emit-base-modelica">,
-  Visibility<[MarcoOption, MC1Option]>,
-  Group<Action_Group>,
-  HelpText<"Emit Base Modelica">;
-def emit_ast : Flag<["-"], "emit-ast">,
-  Visibility<[ClangOption, CLOption, DXCOption, MC1Option, MarcoOption]>,
-  HelpText<"Emit Clang AST files for source inputs">;
-def emit_llvm : Flag<["-"], "emit-llvm">,
-  Visibility<[ClangOption, CC1Option, FC1Option, FlangOption, MC1Option, MarcoOption]>,
-  Group<Action_Group>,
-  HelpText<"Use the LLVM representation for assembler and object files">;
 def emit_interface_stubs : Flag<["-"], "emit-interface-stubs">,
   Visibility<[ClangOption, CC1Option]>, Group<Action_Group>,
   HelpText<"Generate Interface Stub Files.">;
@@ -7952,8 +7941,6 @@ def emit_obj : Flag<["-"], "emit-obj">,
   HelpText<"Emit native object files">;
 def init_only : Flag<["-"], "init-only">,
   HelpText<"Only execute frontend initialization">;
-def emit_llvm_bc : Flag<["-"], "emit-llvm-bc">,
-  HelpText<"Build ASTs then convert to LLVM, emit .bc file">;
 
 } // let Group = Action_Group
 
@@ -8769,6 +8756,33 @@ defm ida_jacobian_one_sweep : BoolOption<"", "ida-jacobian-one-sweep",
 // MARCO Frontend (mc1) Options
 //===----------------------------------------------------------------------===//
 
+def emit_ast : Flag<["-"], "emit-ast">,
+  Visibility<[ClangOption, CLOption, DXCOption, MC1Option, MarcoOption]>,
+  HelpText<"Emit AST files for source inputs">;
+
+def emit_base_modelica : Flag<["-"], "emit-base-modelica">,
+  Visibility<[MarcoOption, MC1Option]>,
+  Group<Action_Group>,
+  HelpText<"Emit Base Modelica">;
+
 def emit_mlir : Flag<["-"], "emit-mlir">, Group<Action_Group>,
   Visibility<[FC1Option, MarcoOption, MC1Option]>,
-  HelpText<"Build the parse tree, then lower it to MLIR">;
+  HelpText<"Emit the MLIR code obtained up to a certain point within the compilation pipeline">;
+
+def emit_mlir_modelica : Flag<["-"], "emit-mlir-modelica">,
+  Group<Action_Group>,
+  Visibility<[MarcoOption, MC1Option]>,
+  HelpText<"Emit the MLIR Modelica dialect obtained after lowering the AST">;
+
+def emit_mlir_llvm : Flag<["-"], "emit-mlir-llvm">,
+  Group<Action_Group>,
+  Visibility<[MarcoOption, MC1Option]>,
+  HelpText<"Emit the MLIR LLVM dialect">;
+
+def emit_llvm : Flag<["-"], "emit-llvm">,
+  Visibility<[ClangOption, CC1Option, FC1Option, FlangOption, MC1Option, MarcoOption]>,
+  Group<Action_Group>,
+  HelpText<"Use the LLVM representation for assembler and object files">;
+
+def emit_llvm_bc : Flag<["-"], "emit-llvm-bc">,
+  HelpText<"Build ASTs then convert to LLVM, emit .bc file">;

@@ -857,7 +857,7 @@ bool ToolChain::needsGCovInstrumentation(const llvm::opt::ArgList &Args) {
 
 Tool *ToolChain::SelectTool(const JobAction &JA) const {
   if (D.IsFlangMode() && getDriver().ShouldUseFlangCompiler(JA)) return getFlang();
-  if(D.isMarcoMode() && getDriver().ShouldUseMarcoCompiler(JA)) return getMarco();
+  if (D.IsMarcoMode() && getDriver().ShouldUseMarcoCompiler(JA)) return getMarco();
   if (getDriver().ShouldUseClangCompiler(JA)) return getClang();
   Action::ActionClass AC = JA.getKind();
   if (AC == Action::AssembleJobClass && useIntegratedAs() &&

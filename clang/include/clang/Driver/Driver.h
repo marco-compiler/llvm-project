@@ -226,7 +226,7 @@ public:
   /// Other modes fall back to calling gcc which in turn calls gfortran.
   bool IsFlangMode() const { return Mode == FlangMode; }
 
-  bool isMarcoMode() const { return Mode == MarcoMode; }
+  bool IsMarcoMode() const { return Mode == MarcoMode; }
 
   /// Whether the driver should follow dxc.exe like behavior.
   bool IsDXCMode() const { return Mode == DXCMode; }

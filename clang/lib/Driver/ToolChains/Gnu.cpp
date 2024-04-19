@@ -578,7 +578,7 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-lm");
   }
 
-  if(getToolChain().getDriver().isMarcoMode()) {
+  if (getToolChain().getDriver().IsMarcoMode()) {
     addMarcoLinkerArgs(ToolChain, Args, CmdArgs);
   }
 

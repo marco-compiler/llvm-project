@@ -173,7 +173,6 @@ bool types::isAcceptedByFlang(ID Id) {
   }
 }
 
-
 bool types::isAcceptedByMarco(ID Id) {
   switch (Id) {
     default:
@@ -181,6 +180,9 @@ bool types::isAcceptedByMarco(ID Id) {
 
     case TY_Modelica:
     case TY_BaseModelica:
+    case TY_MLIR:
+    case TY_MLIR_Modelica:
+    case TY_MLIR_LLVM:
     case TY_LLVM_IR:
     case TY_LLVM_BC:
       return true;
@@ -380,6 +382,8 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
       .Case("cxxm", TY_CXXModule)
       .Case("hlsl", TY_HLSL)
       .Case("mo", TY_Modelica)
+      .Case("bo", TY_BaseModelica)
+      .Case("mlir", TY_MLIR)
       .Default(TY_INVALID);
 }
 
