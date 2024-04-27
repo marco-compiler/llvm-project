@@ -7941,7 +7941,8 @@ def emit_obj : Flag<["-"], "emit-obj">,
   HelpText<"Emit native object files">;
 def init_only : Flag<["-"], "init-only">,
   HelpText<"Only execute frontend initialization">;
-
+def emit_llvm_bc : Flag<["-"], "emit-llvm-bc">,
+  HelpText<"Build ASTs then convert to LLVM, emit .bc file">;
 } // let Group = Action_Group
 
 def load : Separate<["-"], "load">, MetaVarName<"<dsopath>">,
@@ -8783,6 +8784,3 @@ def emit_llvm : Flag<["-"], "emit-llvm">,
   Visibility<[ClangOption, CC1Option, FC1Option, FlangOption, MC1Option, MarcoOption]>,
   Group<Action_Group>,
   HelpText<"Use the LLVM representation for assembler and object files">;
-
-def emit_llvm_bc : Flag<["-"], "emit-llvm-bc">,
-  HelpText<"Build ASTs then convert to LLVM, emit .bc file">;
