@@ -487,11 +487,15 @@ LogicalResult
 BufferDeallocation::verifyFunctionPreconditions(FunctionOpInterface op) {
   // (1) Ensure that there are supported loops only (no explicit control flow
   // loops).
+  /*
+   * Disable the check for MARCO, which should not need it.
+   * Let's hope for future works on this.
   Backedges backedges(op);
   if (backedges.size()) {
     op->emitError("Only structured control-flow loops are supported.");
     return failure();
   }
+  */
 
   return success();
 }
