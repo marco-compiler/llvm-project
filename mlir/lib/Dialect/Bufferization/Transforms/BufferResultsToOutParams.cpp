@@ -42,6 +42,18 @@ static bool hasStaticIdentityLayout(MemRefType type) {
   return type.getLayout().isIdentity();
 }
 
+/// Return 'true' if the given MemRef type can be moved from being a result to
+/// being an argument.
+static bool canBeMoved(MemRefType type) {
+  // Only buffers with static identity layout can be allocated. These can
+  // be casted to memrefs with fully dynamic layout map. Other layout maps
+  // are not supported.
+  if (!type.hasStaticShape())
+    return false;
+
+  return hasStaticIdentityLayout(type) || hasFullyDynamicLayoutMap(type);
+}
+
 // Updates the func op and entry block.
 //
 // Any args appended to the entry block are added to `appendedEntryArgs`.
@@ -58,14 +70,17 @@ updateFuncOp(func::FuncOp func,
   BitVector erasedResultIndices(functionType.getNumResults());
   for (const auto &resultType : llvm::enumerate(functionType.getResults())) {
     if (auto memrefType = dyn_cast<MemRefType>(resultType.value())) {
+      if (!canBeMoved(memrefType))
+        continue;
+
+      /*
       if (!hasStaticIdentityLayout(memrefType) &&
           !hasFullyDynamicLayoutMap(memrefType)) {
-        // Only buffers with static identity layout can be allocated. These can
-        // be casted to memrefs with fully dynamic layout map. Other layout maps
-        // are not supported.
         return func->emitError()
                << "cannot create out param for result with unsupported layout";
       }
+       */
+
       erasedResultIndices.set(resultType.index());
       erasedResultTypes.push_back(memrefType);
     }
@@ -112,7 +127,8 @@ static LogicalResult updateReturnOps(func::FuncOp func,
     SmallVector<Value, 6> copyIntoOutParams;
     SmallVector<Value, 6> keepAsReturnOperands;
     for (Value operand : op.getOperands()) {
-      if (isa<MemRefType>(operand.getType()))
+      auto memRefType = dyn_cast<MemRefType>(operand.getType());
+      if (memRefType && canBeMoved(memRefType))
         copyIntoOutParams.push_back(operand);
       else
         keepAsReturnOperands.push_back(operand);
@@ -150,7 +166,8 @@ updateCalls(ModuleOp module,
     SmallVector<Value, 6> replaceWithNewCallResults;
     SmallVector<Value, 6> replaceWithOutParams;
     for (OpResult result : op.getResults()) {
-      if (isa<MemRefType>(result.getType()))
+      auto memRefType = dyn_cast<MemRefType>(result.getType());
+      if (memRefType && canBeMoved(memRefType))
         replaceWithOutParams.push_back(result);
       else
         replaceWithNewCallResults.push_back(result);
