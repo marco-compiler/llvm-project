@@ -8786,6 +8786,5 @@ def emit_llvm : Flag<["-"], "emit-llvm">,
   HelpText<"Use the LLVM representation for assembler and object files">;
 
 def print_model_info : Flag<["--"], "print-model-info">,
-  Group<Action_Group>,
   Visibility<[MarcoOption, MC1Option]>,
   HelpText<"Print information about the model being compiled">;
