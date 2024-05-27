@@ -6629,10 +6629,10 @@ def darwin_target_variant_triple : Separate<["-"], "darwin-target-variant-triple
 } // let Visibility = [ClangOption, CC1Option, CC1AsOption]
 
 //===----------------------------------------------------------------------===//
-// Target Options (cc1 + cc1as + fc1)
+// Target Options (cc1 + cc1as + fc1 + mc1)
 //===----------------------------------------------------------------------===//
 
-let Visibility = [CC1Option, CC1AsOption, FC1Option] in {
+let Visibility = [CC1Option, CC1AsOption, FC1Option, MC1Option] in {
 
 def target_cpu : Separate<["-"], "target-cpu">,
   HelpText<"Target a specific cpu type">,
@@ -6645,7 +6645,7 @@ def triple : Separate<["-"], "triple">,
   MarshallingInfoString<TargetOpts<"Triple">, "llvm::Triple::normalize(llvm::sys::getDefaultTargetTriple())">,
   AlwaysEmit, Normalizer<"normalizeTriple">;
 
-} // let Visibility = [CC1Option, CC1AsOption, FC1Option]
+} // let Visibility = [CC1Option, CC1AsOption, FC1Option, MC1Option]
 
 //===----------------------------------------------------------------------===//
 // Target Options (other)
