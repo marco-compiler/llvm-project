@@ -138,6 +138,7 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
     }
   }
 
+  // Output file.
   if (Output.isFilename()) {
     CmdArgs.push_back("-o");
     CmdArgs.push_back(Output.getFilename());
@@ -145,10 +146,12 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
     assert(Output.isNothing() && "Invalid output.");
   }
 
-  for(auto& input : Inputs) {
+  // Input files.
+  for (auto& input : Inputs) {
     CmdArgs.push_back(input.getFilename());
   }
 
+  // Build the command.
   const char *Exec = Args.MakeArgString(D.GetProgramPath("marco", TC));
   C.addCommand(std::make_unique<Command>(JA, *this,
                                          ResponseFileSupport::AtFileUTF8(),
