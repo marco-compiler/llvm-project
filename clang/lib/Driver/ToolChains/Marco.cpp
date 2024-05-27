@@ -48,7 +48,6 @@ void Marco::addMarcoOptions(const ArgList &Args,
         options::OPT_omp,
         options::OPT_no_omp,
         options::OPT_target,
-        options::OPT_mcpu_EQ,
         options::OPT_model,
         options::OPT_filter,
         options::OPT_solver,
@@ -71,8 +70,10 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
                          const InputInfo &Output, const InputInfoList &Inputs,
                          const ArgList &Args, const char *LinkingOutput) const {
   const auto &TC = getToolChain();
-
   const Driver &D = TC.getDriver();
+  const llvm::Triple &Triple = TC.getEffectiveTriple();
+  const std::string &TripleStr = Triple.getTriple();
+
   ArgStringList CmdArgs;
 
   // Invoke ourselves in -mc1 mode.
@@ -136,6 +137,15 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
       A->render(Args, CmdArgs);
     }
   }
+
+  // Target-specific arguments.
+  std::string CPU = getCPUName(D, Args, Triple, false);
+
+  if (!CPU.empty()) {
+    CmdArgs.push_back(Args.MakeArgString("-mcpu=" + CPU));
+  }
+
+  getTargetFeatures(D, Triple, Args, CmdArgs, false);
 
   // Output file.
   if (Output.isFilename()) {
