@@ -146,7 +146,8 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
   std::string CPU = getCPUName(D, Args, Triple, false);
 
   if (!CPU.empty()) {
-    CmdArgs.push_back(Args.MakeArgString("-mcpu=" + CPU));
+    CmdArgs.push_back("-target-cpu");
+    CmdArgs.push_back(Args.MakeArgString(CPU));
   }
 
   getTargetFeatures(D, Triple, Args, CmdArgs, false);

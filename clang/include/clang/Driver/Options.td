@@ -5799,7 +5799,7 @@ def fno_pie : Flag<["-"], "fno-pie">, Group<f_Group>;
 // Target Options (clang + flang-new + marco + mc1)
 //===----------------------------------------------------------------------===//
 let Flags = [TargetSpecific] in {
-let Visibility = [ClangOption, FlangOption, MarcoOption, MC1Option] in {
+let Visibility = [ClangOption, FlangOption, MarcoOption] in {
 
 def mcpu_EQ : Joined<["-"], "mcpu=">, Group<m_Group>,
   HelpText<"For a list of available CPUs for the target use '-mcpu=help'">;
