@@ -143,6 +143,9 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   // Target-specific arguments.
+  CmdArgs.push_back("-triple");
+  CmdArgs.push_back(Args.MakeArgString(TripleStr));
+
   std::string CPU = getCPUName(D, Args, Triple, false);
 
   if (!CPU.empty()) {
