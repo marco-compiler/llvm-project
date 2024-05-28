@@ -21,6 +21,10 @@ using namespace clang::driver::tools;
 using namespace clang;
 using namespace llvm::opt;
 
+Marco::Marco(const ToolChain &TC) : Tool("marco", "marco frontend", TC) {}
+
+Marco::~Marco() {}
+
 void Marco::addMarcoOptions(const ArgList &Args,
                                      ArgStringList &CmdArgs) const {
   Args.addAllArgs(
@@ -166,7 +170,3 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
                                          ResponseFileSupport::AtFileUTF8(),
                                          Exec, CmdArgs, Inputs, Output));
 }
-
-Marco::Marco(const ToolChain &TC) : Tool("marco", "marco frontend", TC) {}
-
-Marco::~Marco() {}
