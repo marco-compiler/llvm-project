@@ -3469,7 +3469,7 @@ def fno_openmp_target_debug : Flag<["-"], "fno-openmp-target-debug">;
 //===----------------------------------------------------------------------===//
 // FlangOption + FC1 + ClangOption + CC1Option
 //===----------------------------------------------------------------------===//
-let Visibility = [MC1Option, MarcoOption, FC1Option, FlangOption, CC1Option, ClangOption] in {
+let Visibility = [FC1Option, FlangOption, CC1Option, ClangOption] in {
 def fopenacc : Flag<["-"], "fopenacc">, Group<f_Group>,
   HelpText<"Enable OpenACC">;
 } // let Visibility = [FC1Option, FlangOption, CC1Option, ClangOption]
@@ -4497,10 +4497,10 @@ def inline_asm_EQ : Joined<["-"], "inline-asm=">, Group<m_Group>,
   NormalizedValuesScope<"CodeGenOptions">, NormalizedValues<["IAD_ATT", "IAD_Intel"]>,
   MarshallingInfoEnum<CodeGenOpts<"InlineAsmDialect">, "IAD_ATT">;
 def mcmodel_EQ : Joined<["-"], "mcmodel=">, Group<m_Group>,
-  Visibility<[ClangOption, CC1Option]>,
+  Visibility<[ClangOption, CC1Option, MarcoOption, MC1Option]>,
   MarshallingInfoString<TargetOpts<"CodeModel">, [{"default"}]>;
 def mlarge_data_threshold_EQ : Joined<["-"], "mlarge-data-threshold=">, Group<m_Group>,
-  Flags<[TargetSpecific]>, Visibility<[ClangOption, CC1Option]>,
+  Flags<[TargetSpecific]>, Visibility<[ClangOption, CC1Option, MarcoOption, MC1Option]>,
   MarshallingInfoInt<TargetOpts<"LargeDataThreshold">, "0">;
 def mtls_size_EQ : Joined<["-"], "mtls-size=">, Group<m_Group>,
   Visibility<[ClangOption, CC1Option]>,
@@ -4617,7 +4617,7 @@ def mthread_model : Separate<["-"], "mthread-model">, Group<m_Group>,
   NormalizedValues<["POSIX", "Single"]>, NormalizedValuesScope<"LangOptions::ThreadModelKind">,
   MarshallingInfoEnum<LangOpts<"ThreadModel">, "POSIX">;
 def meabi : Separate<["-"], "meabi">, Group<m_Group>,
-  Visibility<[ClangOption, CC1Option]>,
+  Visibility<[ClangOption, CC1Option, MarcoOption, MC1Option]>,
   HelpText<"Set EABI type. Default depends on triple)">, Values<"default,4,5,gnu">,
   MarshallingInfoEnum<TargetOpts<"EABIVersion">, "Default">,
   NormalizedValuesScope<"llvm::EABI">,
@@ -5553,7 +5553,7 @@ def no_system_header_prefix : Joined<["--"], "no-system-header-prefix=">,
 def : Separate<["--"], "no-system-header-prefix">, Alias<no_system_header_prefix>;
 def s : Flag<["-"], "s">, Group<Link_Group>;
 def target : Joined<["--"], "target=">, Flags<[NoXarchOption]>,
-  Visibility<[ClangOption, CLOption, DXCOption, FlangOption, MC1Option, MarcoOption]>,
+  Visibility<[ClangOption, CLOption, DXCOption, FlangOption, MarcoOption]>,
   HelpText<"Generate code for the given target">;
 def darwin_target_variant : Separate<["-"], "darwin-target-variant">,
   Flags<[NoXarchOption]>, Visibility<[ClangOption, CLOption]>,
@@ -6603,7 +6603,7 @@ def emit_hlfir : Flag<["-"], "emit-hlfir">, Group<Action_Group>,
 // Target Options (cc1 + cc1as)
 //===----------------------------------------------------------------------===//
 
-let Visibility = [CC1Option, CC1AsOption] in {
+let Visibility = [CC1Option, CC1AsOption, MC1Option] in {
 
 def tune_cpu : Separate<["-"], "tune-cpu">,
   HelpText<"Tune for a specific cpu type">,
@@ -6617,16 +6617,16 @@ def darwin_target_variant_sdk_version_EQ : Joined<["-"],
   "darwin-target-variant-sdk-version=">,
   HelpText<"The version of darwin target variant SDK used for compilation">;
 
-} // let Visibility = [CC1Option, CC1AsOption]
+} // let Visibility = [CC1Option, CC1AsOption, MC1Option]
 
-let Visibility = [ClangOption, CC1Option, CC1AsOption] in {
+let Visibility = [ClangOption, CC1Option, CC1AsOption, MC1Option] in {
 
 def darwin_target_variant_triple : Separate<["-"], "darwin-target-variant-triple">,
   HelpText<"Specify the darwin target variant triple">,
   MarshallingInfoString<TargetOpts<"DarwinTargetVariantTriple">>,
   Normalizer<"normalizeTriple">;
 
-} // let Visibility = [ClangOption, CC1Option, CC1AsOption]
+} // let Visibility = [ClangOption, CC1Option, CC1AsOption, MC1Option]
 
 //===----------------------------------------------------------------------===//
 // Target Options (cc1 + cc1as + fc1 + mc1)
@@ -6651,7 +6651,7 @@ def triple : Separate<["-"], "triple">,
 // Target Options (other)
 //===----------------------------------------------------------------------===//
 
-let Visibility = [CC1Option] in {
+let Visibility = [CC1Option, MC1Option] in {
 
 def target_linker_version : Separate<["-"], "target-linker-version">,
   HelpText<"Target linker version">,
@@ -6667,7 +6667,7 @@ defm padding_on_unsigned_fixed_point : BoolOption<"f", "padding-on-unsigned-fixe
   NegFlag<SetFalse>>,
   ShouldParseIf<ffixed_point.KeyPath>;
 
-} // let Visibility = [CC1Option]
+} // let Visibility = [CC1Option, MC1Option]
 
 //===----------------------------------------------------------------------===//
 // Analyzer Options

@@ -26,16 +26,36 @@ Marco::Marco(const ToolChain &TC) : Tool("marco", "marco frontend", TC) {}
 Marco::~Marco() {}
 
 void Marco::addMarcoOptions(const ArgList &Args,
-                                     ArgStringList &CmdArgs) const {
+                            ArgStringList &CmdArgs) const {
   Args.addAllArgs(
       CmdArgs,
       {
         options::OPT_g_Flag,
+        options::OPT_mcmodel_EQ,
+        options::OPT_mlarge_data_threshold_EQ,
+        options::OPT_meabi,
+        options::OPT_tune_cpu,
+        options::OPT_target_abi,
+        options::OPT_target_sdk_version_EQ,
+        options::OPT_darwin_target_variant_sdk_version_EQ,
+        options::OPT_darwin_target_variant_triple,
+        options::OPT_target_cpu,
+        options::OPT_target_feature,
+        options::OPT_triple,
+        options::OPT_target_linker_version,
+        options::OPT_triple_EQ,
+        options::OPT_mfpmath,
+        options::OPT_fpadding_on_unsigned_fixed_point,
+        options::OPT_print_statistics,
+        options::OPT_multithreading,
+        options::OPT_no_multithreading,
         options::OPT_omc_path,
         options::OPT_omc_arg,
         options::OPT_omc_bypass,
         options::OPT_assertions,
         options::OPT_no_assertions,
+        options::OPT_generate_main,
+        options::OPT_no_generate_main,
         options::OPT_bit_width,
         options::OPT_function_inlining,
         options::OPT_no_function_inlining,
@@ -51,7 +71,6 @@ void Marco::addMarcoOptions(const ArgList &Args,
         options::OPT_no_equations_runtime_scheduling,
         options::OPT_omp,
         options::OPT_no_omp,
-        options::OPT_target,
         options::OPT_model,
         options::OPT_filter,
         options::OPT_solver,
@@ -61,11 +80,7 @@ void Marco::addMarcoOptions(const ArgList &Args,
         options::OPT_no_ida_reduced_derivatives,
         options::OPT_ida_jacobian_one_sweep,
         options::OPT_no_ida_jacobian_one_sweep,
-        options::OPT_init_only,
-        options::OPT_print_statistics,
-        options::OPT_print_model_info,
-        options::OPT_multithreading,
-        options::OPT_no_multithreading
+        options::OPT_print_model_info
      }
     );
 }
