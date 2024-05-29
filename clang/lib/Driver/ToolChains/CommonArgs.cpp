@@ -1359,7 +1359,7 @@ void tools::addMarcoLinkerArgs(
       Args.getLastArgValue(options::OPT_solver, "euler-forward");
 
   // Add the main function to the simulation, if not explicitly discarded.
-  if (!Args.hasArg(options::OPT_no_generate_main)) {
+  if (!Args.hasArg(options::OPT_no_link_runtime_main)) {
     CmdArgs.push_back("-lMARCORuntimeStarter");
   }
 
