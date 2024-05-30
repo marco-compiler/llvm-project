@@ -176,6 +176,12 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
     assert(Output.isNothing() && "Invalid output.");
   }
 
+  // Forward -Xmarco arguments to -mc1.
+  for (auto *Arg : Args.filtered(options::OPT_Xmarco)) {
+    Arg->claim();
+    CmdArgs.push_back(Arg->getValue());
+  }
+
   // Input files.
   for (auto& input : Inputs) {
     CmdArgs.push_back(input.getFilename());
