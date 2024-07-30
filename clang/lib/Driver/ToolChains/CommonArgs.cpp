@@ -1373,6 +1373,10 @@ void tools::addMarcoLinkerArgs(
   } else if (solverString == "ida") {
     CmdArgs.push_back("-lMARCORuntimeDriverIDA");
     CmdArgs.push_back("-lMARCORuntimeSolverIDA");
+  } else if (solverString == "rk4" ||
+             solverString.starts_with("rk-")) {
+    CmdArgs.push_back("-lMARCORuntimeDriverRungeKutta");
+    CmdArgs.push_back("-lMARCORuntimeSolverRungeKutta");
   }
 
   // Add the remaining runtime libraries.
