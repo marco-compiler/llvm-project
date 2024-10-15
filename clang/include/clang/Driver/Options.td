@@ -8755,6 +8755,20 @@ defm variables_to_parameters_promotion : BoolOption<"", "variables-to-parameters
     BothFlags<[], [MC1Option], " variables to parameters when depending only on constants or parameters">>,
     Group<MarcoCodegen_Group>;
 
+def scc_substitution_max_iterations : Joined<["-"], "scc-substitution-max-iter=">,
+    MarcoCodegenOpts<"SCC Solving by substitution">,
+    Visibility<[MC1Option]>,
+    Group<MarcoCodegen_Group>,
+    MarshallingInfoInt<LangOpts<"ConstexprCallDepth">, "100">,
+    HelpText<"Set the maximum number of iterations allowed for each SCC when solving SCCs by substitution">;
+
+def scc_substitution_max_equations : Joined<["-"], "scc-substitution-max-eqs=">,
+    MarcoCodegenOpts<"SCC Solving by substitution">,
+    Visibility<[MC1Option]>,
+    Group<MarcoCodegen_Group>,
+    MarshallingInfoInt<LangOpts<"ConstexprCallDepth">, "5">,
+    HelpText<"Set the maximum number of equations allowed for an SCC to be considered for solving by substitution">;
+
 defm cse : BoolOption<"", "cse",
     MarcoCodegenOpts<"CSE">,
     DefaultFalse,
