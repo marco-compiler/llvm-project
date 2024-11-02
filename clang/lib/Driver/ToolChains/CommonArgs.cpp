@@ -876,7 +876,7 @@ void tools::addLTOOptions(const ToolChain &ToolChain, const ArgList &Args,
   // LowerMatrixIntrinsicsPass, which is transitively called by
   // buildThinLTODefaultPipeline under EnableMatrix.
   if ((IsThinLTO || IsFatLTO || IsUnifiedLTO) &&
-        Args.hasArg(options::OPT_fenable_matrix))
+      Args.hasArg(options::OPT_fenable_matrix))
     CmdArgs.push_back(
         Args.MakeArgString(Twine(PluginOptPrefix) + "-enable-matrix"));
 
@@ -1184,7 +1184,7 @@ bool tools::addOpenMPRuntime(ArgStringList &CmdArgs, const ToolChain &TC,
     CmdArgs.push_back("-Bdynamic");
 
   if (RTKind == Driver::OMPRT_GOMP && GompNeedsRT)
-      CmdArgs.push_back("-lrt");
+    CmdArgs.push_back("-lrt");
 
   if (IsOffloadingHost)
     CmdArgs.push_back("-lomptarget");
@@ -1349,14 +1349,19 @@ void tools::addFortranRuntimeLibraryPath(const ToolChain &TC,
     CmdArgs.push_back(Args.MakeArgString("-L" + DefaultLibPath));
 }
 
-void tools::addMarcoLinkerArgs(
-    const ToolChain &TC,
-    const llvm::opt::ArgList &Args,
-    llvm::opt::ArgStringList &CmdArgs)
-{
+void tools::addMarcoLinkerArgs(const ToolChain &TC,
+                               const llvm::opt::ArgList &Args,
+                               llvm::opt::ArgStringList &CmdArgs) {
+  bool staticBuild = Args.hasArg(options::OPT_static);
+
+  if (staticBuild) {
+    CmdArgs.push_back("-Bstatic");
+  } else {
+    CmdArgs.push_back("-Bdynamic");
+  }
+
   // Get the name of the requested solver.
-  auto solverString =
-      Args.getLastArgValue(options::OPT_solver, "euler-forward");
+  auto solver = Args.getLastArgValue(options::OPT_solver, "euler-forward");
 
   // Add the main function to the simulation, if not explicitly discarded.
   if (!Args.hasArg(options::OPT_no_link_runtime_main)) {
@@ -1367,41 +1372,77 @@ void tools::addMarcoLinkerArgs(
   CmdArgs.push_back("-lMARCORuntimeSimulation");
 
   // Add the libraries of the solver.
-  if (solverString == "euler-forward") {
+  if (solver == "euler-forward") {
     CmdArgs.push_back("-lMARCORuntimeDriverEulerForward");
     CmdArgs.push_back("-lMARCORuntimeSolverEulerForward");
-  } else if (solverString == "ida") {
+  } else if (solver == "ida") {
     CmdArgs.push_back("-lMARCORuntimeDriverIDA");
     CmdArgs.push_back("-lMARCORuntimeSolverIDA");
-  } else if (solverString == "rk4" ||
-             solverString.starts_with("rk-")) {
+  } else if (solver == "rk4" || solver.starts_with("rk-")) {
     CmdArgs.push_back("-lMARCORuntimeDriverRungeKutta");
     CmdArgs.push_back("-lMARCORuntimeSolverRungeKutta");
   }
 
-  // Add the remaining runtime libraries.
-  CmdArgs.push_back("-lMARCORuntimeSolverKINSOL");
-  CmdArgs.push_back("-lMARCORuntimeSolverSUNDIALS");
-  CmdArgs.push_back("-lMARCORuntimePrinterCSV");
+  // Add the Modelica support library.
   CmdArgs.push_back("-lMARCORuntimeSupport");
+
+  // Add the printer library.
+  CmdArgs.push_back("-lMARCORuntimePrinterCSV");
+
+  // Add the solver libraries.
+  if (staticBuild) {
+    CmdArgs.push_back("-lMARCORuntimeSolverKINSOL_static");
+    CmdArgs.push_back("-lMARCORuntimeSolverSUNDIALS_static");
+  } else {
+    CmdArgs.push_back("-lMARCORuntimeSolverKINSOL");
+    CmdArgs.push_back("-lMARCORuntimeSolverSUNDIALS");
+  }
+
+  // Add the utility libraries.
   CmdArgs.push_back("-lMARCORuntimeCLI");
   CmdArgs.push_back("-lMARCORuntimeModeling");
   CmdArgs.push_back("-lMARCORuntimeMultithreading");
-  CmdArgs.push_back("-lMARCORuntimeProfiling");
 
-  if (solverString == "ida") {
-    CmdArgs.push_back("-lsundials_ida");
+  if (staticBuild) {
+    CmdArgs.push_back("-lMARCORuntimeProfiling_static");
+  } else {
+    CmdArgs.push_back("-lMARCORuntimeProfiling");
   }
 
-  CmdArgs.push_back("-lsundials_kinsol");
-  CmdArgs.push_back("-lsundials_nvecserial");
-  CmdArgs.push_back("-lsundials_sunlinsolklu");
-  CmdArgs.push_back("-lklu");
+  // Add the options libraries.
+  if (staticBuild) {
+    CmdArgs.push_back("-lMARCORuntimeOptionsCSVPrinter_static");
 
-  // Utility functions provided by MLIR.
-  CmdArgs.push_back("-lmlir_c_runner_utils");
+    if (solver == "euler-forward") {
+      CmdArgs.push_back("-lMARCORuntimeOptionsEulerForward_static");
+    } else if (solver == "ida") {
+      CmdArgs.push_back("-lMARCORuntimeOptionsIDA_static");
+    } else if (solver == "rk4" || solver.starts_with("rk-")) {
+      CmdArgs.push_back("-lMARCORuntimeOptionsRungeKutta_static");
+    }
 
-  // Standard libraries.
+    CmdArgs.push_back("-lMARCORuntimeOptionsKINSOL_static");
+
+    CmdArgs.push_back("-lMARCORuntimeOptionsMultithreading_static");
+    CmdArgs.push_back("-lMARCORuntimeOptionsSimulation_static");
+  } else {
+    CmdArgs.push_back("-lMARCORuntimeOptionsCSVPrinter");
+
+    if (solver == "euler-forward") {
+      CmdArgs.push_back("-lMARCORuntimeOptionsEulerForward");
+    } else if (solver == "ida") {
+      CmdArgs.push_back("-lMARCORuntimeOptionsIDA");
+    } else if (solver == "rk4" || solver.starts_with("rk-")) {
+      CmdArgs.push_back("-lMARCORuntimeOptionsRungeKutta");
+    }
+
+    CmdArgs.push_back("-lMARCORuntimeOptionsKINSOL");
+
+    CmdArgs.push_back("-lMARCORuntimeOptionsMultithreading");
+    CmdArgs.push_back("-lMARCORuntimeOptionsSimulation");
+  }
+
+  // System libraries.
   CmdArgs.push_back("-lm");
   CmdArgs.push_back("-lpthread");
 
@@ -1413,10 +1454,12 @@ static void addSanitizerRuntime(const ToolChain &TC, const ArgList &Args,
                                 bool IsShared, bool IsWhole) {
   // Wrap any static runtimes that must be forced into executable in
   // whole-archive.
-  if (IsWhole) CmdArgs.push_back("--whole-archive");
+  if (IsWhole)
+    CmdArgs.push_back("--whole-archive");
   CmdArgs.push_back(TC.getCompilerRTArgString(
       Args, Sanitizer, IsShared ? ToolChain::FT_Shared : ToolChain::FT_Static));
-  if (IsWhole) CmdArgs.push_back("--no-whole-archive");
+  if (IsWhole)
+    CmdArgs.push_back("--no-whole-archive");
 
   if (IsShared) {
     addArchSpecificRPath(TC, Args, CmdArgs);
@@ -1483,8 +1526,7 @@ void tools::linkSanitizerRuntimeDeps(const ToolChain &TC,
       TC.getTriple().getOS() != llvm::Triple::RTEMS)
     CmdArgs.push_back("-ldl");
   // Required for backtrace on some OSes
-  if (TC.getTriple().isOSFreeBSD() ||
-      TC.getTriple().isOSNetBSD() ||
+  if (TC.getTriple().isOSFreeBSD() || TC.getTriple().isOSNetBSD() ||
       TC.getTriple().isOSOpenBSD())
     CmdArgs.push_back("-lexecinfo");
   // There is no libresolv on Android, FreeBSD, OpenBSD, etc. On musl
@@ -1696,7 +1738,8 @@ bool tools::addSanitizerRuntimes(const ToolChain &TC, const ArgList &Args,
   return !StaticRuntimes.empty() || !NonWholeStaticRuntimes.empty();
 }
 
-bool tools::addXRayRuntime(const ToolChain&TC, const ArgList &Args, ArgStringList &CmdArgs) {
+bool tools::addXRayRuntime(const ToolChain &TC, const ArgList &Args,
+                           ArgStringList &CmdArgs) {
   if (Args.hasArg(options::OPT_shared))
     return false;
 
@@ -1721,8 +1764,7 @@ void tools::linkXRayRuntimeDeps(const ToolChain &TC,
     CmdArgs.push_back("-lrt");
   CmdArgs.push_back("-lm");
 
-  if (!TC.getTriple().isOSFreeBSD() &&
-      !TC.getTriple().isOSNetBSD() &&
+  if (!TC.getTriple().isOSFreeBSD() && !TC.getTriple().isOSNetBSD() &&
       !TC.getTriple().isOSOpenBSD())
     CmdArgs.push_back("-ldl");
 }
@@ -2013,19 +2055,19 @@ tools::ParsePICArgs(const ToolChain &ToolChain, const ArgList &Args) {
 
   bool EmbeddedPISupported;
   switch (Triple.getArch()) {
-    case llvm::Triple::arm:
-    case llvm::Triple::armeb:
-    case llvm::Triple::thumb:
-    case llvm::Triple::thumbeb:
-      EmbeddedPISupported = true;
-      break;
-    default:
-      EmbeddedPISupported = false;
-      break;
+  case llvm::Triple::arm:
+  case llvm::Triple::armeb:
+  case llvm::Triple::thumb:
+  case llvm::Triple::thumbeb:
+    EmbeddedPISupported = true;
+    break;
+  default:
+    EmbeddedPISupported = false;
+    break;
   }
 
   bool ROPI = false, RWPI = false;
-  Arg* LastROPIArg = Args.getLastArg(options::OPT_fropi, options::OPT_fno_ropi);
+  Arg *LastROPIArg = Args.getLastArg(options::OPT_fropi, options::OPT_fno_ropi);
   if (LastROPIArg && LastROPIArg->getOption().matches(options::OPT_fropi)) {
     if (!EmbeddedPISupported)
       ToolChain.getDriver().Diag(diag::err_drv_unsupported_opt_for_target)
@@ -2054,7 +2096,7 @@ tools::ParsePICArgs(const ToolChain &ToolChain, const ArgList &Args) {
     if (ABIName == "n64")
       PIC = true;
     // When targettng MIPS with -mno-abicalls, it's always static.
-    if(Args.hasArg(options::OPT_mno_abicalls))
+    if (Args.hasArg(options::OPT_mno_abicalls))
       return std::make_tuple(llvm::Reloc::Static, 0U, false);
     // Unlike other architectures, MIPS, even with -fPIC/-mxgot/multigot,
     // does not use PIC level 2 for historical reasons.
@@ -2216,7 +2258,8 @@ enum class LibGccType { UnspecifiedLibGcc, StaticLibGcc, SharedLibGcc };
 static LibGccType getLibGccType(const ToolChain &TC, const Driver &D,
                                 const ArgList &Args) {
   if (Args.hasArg(options::OPT_static_libgcc) ||
-      Args.hasArg(options::OPT_static) || Args.hasArg(options::OPT_static_pie) ||
+      Args.hasArg(options::OPT_static) ||
+      Args.hasArg(options::OPT_static_pie) ||
       // The Android NDK only provides libunwind.a, not libunwind.so.
       TC.getTriple().isAndroid())
     return LibGccType::StaticLibGcc;
@@ -2584,11 +2627,10 @@ static void GetSDLFromOffloadArchive(
     return;
 
   StringRef Prefix = isBitCodeSDL ? "libbc-" : "lib";
-  std::string OutputLib =
-      D.GetTemporaryPath(Twine(Prefix + llvm::sys::path::filename(Lib) + "-" +
-                               Arch + "-" + Target)
-                             .str(),
-                         "a");
+  std::string OutputLib = D.GetTemporaryPath(
+      Twine(Prefix + llvm::sys::path::filename(Lib) + "-" + Arch + "-" + Target)
+          .str(),
+      "a");
 
   C.addTempFile(C.getArgs().MakeArgString(OutputLib));
 
@@ -2801,8 +2843,8 @@ void tools::addMachineOutlinerArgs(const Driver &D,
     }
   };
 
-  if (Arg *A = Args.getLastArg(options::OPT_moutline,
-                               options::OPT_mno_outline)) {
+  if (Arg *A =
+          Args.getLastArg(options::OPT_moutline, options::OPT_mno_outline)) {
     if (A->getOption().matches(options::OPT_moutline)) {
       // We only support -moutline in AArch64 and ARM targets right now. If
       // we're not compiling for these, emit a warning and ignore the flag.
