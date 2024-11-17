@@ -37,8 +37,13 @@ struct TypeInfo {
 };
 
 static constexpr TypeInfo TypeInfos[] = {
-#define TYPE(NAME, ID, PP_TYPE, TEMP_SUFFIX, ...) \
-  { NAME, TEMP_SUFFIX, TY_##PP_TYPE, { __VA_ARGS__ }, },
+#define TYPE(NAME, ID, PP_TYPE, TEMP_SUFFIX, ...)                              \
+  {                                                                            \
+      NAME,                                                                    \
+      TEMP_SUFFIX,                                                             \
+      TY_##PP_TYPE,                                                            \
+      {__VA_ARGS__},                                                           \
+  },
 #include "clang/Driver/Types.def"
 #undef TYPE
 };
@@ -49,9 +54,7 @@ static const TypeInfo &getInfo(unsigned id) {
   return TypeInfos[id - 1];
 }
 
-const char *types::getTypeName(ID Id) {
-  return getInfo(Id).Name;
-}
+const char *types::getTypeName(ID Id) { return getInfo(Id).Name; }
 
 types::ID types::getPreprocessedType(ID Id) {
   ID PPT = getInfo(Id).PreprocessedType;
@@ -120,9 +123,7 @@ bool types::appendSuffixForType(ID Id) {
 }
 
 bool types::canLipoType(ID Id) {
-  return (Id == TY_Nothing ||
-          Id == TY_Image ||
-          Id == TY_Object ||
+  return (Id == TY_Nothing || Id == TY_Image || Id == TY_Object ||
           Id == TY_LTO_BC);
 }
 
@@ -132,28 +133,46 @@ bool types::isAcceptedByClang(ID Id) {
     return false;
 
   case TY_Asm:
-  case TY_C: case TY_PP_C:
-  case TY_CL: case TY_PP_CL: case TY_CLCXX: case TY_PP_CLCXX:
-  case TY_CUDA: case TY_PP_CUDA:
+  case TY_C:
+  case TY_PP_C:
+  case TY_CL:
+  case TY_PP_CL:
+  case TY_CLCXX:
+  case TY_PP_CLCXX:
+  case TY_CUDA:
+  case TY_PP_CUDA:
   case TY_CUDA_DEVICE:
   case TY_HIP:
   case TY_PP_HIP:
   case TY_HIP_DEVICE:
-  case TY_ObjC: case TY_PP_ObjC: case TY_PP_ObjC_Alias:
-  case TY_CXX: case TY_PP_CXX:
-  case TY_ObjCXX: case TY_PP_ObjCXX: case TY_PP_ObjCXX_Alias:
-  case TY_CHeader: case TY_PP_CHeader:
+  case TY_ObjC:
+  case TY_PP_ObjC:
+  case TY_PP_ObjC_Alias:
+  case TY_CXX:
+  case TY_PP_CXX:
+  case TY_ObjCXX:
+  case TY_PP_ObjCXX:
+  case TY_PP_ObjCXX_Alias:
+  case TY_CHeader:
+  case TY_PP_CHeader:
   case TY_CLHeader:
-  case TY_ObjCHeader: case TY_PP_ObjCHeader:
-  case TY_CXXHeader: case TY_PP_CXXHeader:
+  case TY_ObjCHeader:
+  case TY_PP_ObjCHeader:
+  case TY_CXXHeader:
+  case TY_PP_CXXHeader:
   case TY_CXXSHeader:
   case TY_CXXUHeader:
   case TY_CXXHUHeader:
   case TY_PP_CXXHeaderUnit:
-  case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader:
-  case TY_CXXModule: case TY_PP_CXXModule:
-  case TY_AST: case TY_ModuleFile: case TY_PCH:
-  case TY_LLVM_IR: case TY_LLVM_BC:
+  case TY_ObjCXXHeader:
+  case TY_PP_ObjCXXHeader:
+  case TY_CXXModule:
+  case TY_PP_CXXModule:
+  case TY_AST:
+  case TY_ModuleFile:
+  case TY_PCH:
+  case TY_LLVM_IR:
+  case TY_LLVM_BC:
   case TY_API_INFO:
     return true;
   }
@@ -175,17 +194,17 @@ bool types::isAcceptedByFlang(ID Id) {
 
 bool types::isAcceptedByMarco(ID Id) {
   switch (Id) {
-    default:
-      return false;
+  default:
+    return false;
 
-    case TY_Modelica:
-    case TY_BaseModelica:
-    case TY_MLIR:
-    case TY_MLIR_Modelica:
-    case TY_MLIR_LLVM:
-    case TY_LLVM_IR:
-    case TY_LLVM_BC:
-      return true;
+  case TY_Modelica:
+  case TY_BaseModelica:
+  case TY_MLIR:
+  case TY_MLIR_Modelica:
+  case TY_MLIR_LLVM:
+  case TY_LLVM_IR:
+  case TY_LLVM_BC:
+    return true;
   }
 }
 
@@ -235,10 +254,16 @@ bool types::isObjC(ID Id) {
   default:
     return false;
 
-  case TY_ObjC: case TY_PP_ObjC: case TY_PP_ObjC_Alias:
-  case TY_ObjCXX: case TY_PP_ObjCXX:
-  case TY_ObjCHeader: case TY_PP_ObjCHeader:
-  case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader: case TY_PP_ObjCXX_Alias:
+  case TY_ObjC:
+  case TY_PP_ObjC:
+  case TY_PP_ObjC_Alias:
+  case TY_ObjCXX:
+  case TY_PP_ObjCXX:
+  case TY_ObjCHeader:
+  case TY_PP_ObjCHeader:
+  case TY_ObjCXXHeader:
+  case TY_PP_ObjCXXHeader:
+  case TY_PP_ObjCXX_Alias:
     return true;
   }
 }
@@ -250,17 +275,25 @@ bool types::isCXX(ID Id) {
   default:
     return false;
 
-  case TY_CXX: case TY_PP_CXX:
-  case TY_ObjCXX: case TY_PP_ObjCXX: case TY_PP_ObjCXX_Alias:
-  case TY_CXXHeader: case TY_PP_CXXHeader:
+  case TY_CXX:
+  case TY_PP_CXX:
+  case TY_ObjCXX:
+  case TY_PP_ObjCXX:
+  case TY_PP_ObjCXX_Alias:
+  case TY_CXXHeader:
+  case TY_PP_CXXHeader:
   case TY_CXXSHeader:
   case TY_CXXUHeader:
   case TY_CXXHUHeader:
   case TY_PP_CXXHeaderUnit:
-  case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader:
-  case TY_CXXModule: case TY_PP_CXXModule:
+  case TY_ObjCXXHeader:
+  case TY_PP_ObjCXXHeader:
+  case TY_CXXModule:
+  case TY_PP_CXXModule:
   case TY_PP_CLCXX:
-  case TY_CUDA: case TY_PP_CUDA: case TY_CUDA_DEVICE:
+  case TY_CUDA:
+  case TY_PP_CUDA:
+  case TY_CUDA_DEVICE:
   case TY_HIP:
   case TY_PP_HIP:
   case TY_HIP_DEVICE:
@@ -382,16 +415,15 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
       .Case("cxxm", TY_CXXModule)
       .Case("hlsl", TY_HLSL)
       .Case("mo", TY_Modelica)
-      .Case("bo", TY_BaseModelica)
+      .Case("bmo", TY_BaseModelica)
       .Case("mlir", TY_MLIR)
       .Default(TY_INVALID);
 }
 
 types::ID types::lookupTypeForTypeSpecifier(const char *Name) {
-  for (unsigned i=0; i<numTypes; ++i) {
-    types::ID Id = (types::ID) (i + 1);
-    if (canTypeBeUserSpecified(Id) &&
-        strcmp(Name, getInfo(Id).Name) == 0)
+  for (unsigned i = 0; i < numTypes; ++i) {
+    types::ID Id = (types::ID)(i + 1);
+    if (canTypeBeUserSpecified(Id) && strcmp(Name, getInfo(Id).Name) == 0)
       return Id;
   }
   // Accept "cu" as an alias for "cuda" for NVCC compatibility
