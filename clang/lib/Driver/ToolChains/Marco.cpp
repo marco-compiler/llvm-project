@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-
 #include "Marco.h"
 #include "CommonArgs.h"
 
@@ -25,62 +24,56 @@ Marco::Marco(const ToolChain &TC) : Tool("marco", "marco frontend", TC) {}
 
 Marco::~Marco() {}
 
-void Marco::addMarcoOptions(const ArgList &Args,
-                            ArgStringList &CmdArgs) const {
-  Args.addAllArgs(
-      CmdArgs,
-      {
-          options::OPT_g_Flag,
-          options::OPT_mcmodel_EQ,
-          options::OPT_mlarge_data_threshold_EQ,
-          options::OPT_meabi,
-          options::OPT_tune_cpu,
-          options::OPT_target_abi,
-          options::OPT_target_sdk_version_EQ,
-          options::OPT_darwin_target_variant_sdk_version_EQ,
-          options::OPT_darwin_target_variant_triple,
-          options::OPT_target_cpu,
-          options::OPT_target_feature,
-          options::OPT_triple,
-          options::OPT_target_linker_version,
-          options::OPT_triple_EQ,
-          options::OPT_mfpmath,
-          options::OPT_fpadding_on_unsigned_fixed_point,
-          options::OPT_Xomc,
-          options::OPT_omc_path,
-          options::OPT_omc_bypass,
-          options::OPT_model,
-          options::OPT_solver,
-          options::OPT_variables_filter,
-          options::OPT_multithreading,
-          options::OPT_no_multithreading,
-          options::OPT_assertions,
-          options::OPT_no_assertions,
-          options::OPT_bit_width,
-          options::OPT_function_inlining,
-          options::OPT_no_function_inlining,
-          options::OPT_output_arrays_promotion,
-          options::OPT_no_output_arrays_promotion,
-          options::OPT_read_only_variables_propagation,
-          options::OPT_no_read_only_variables_propagation,
-          options::OPT_variables_to_parameters_promotion,
-          options::OPT_no_variables_to_parameters_promotion,
-          options::OPT_cse,
-          options::OPT_no_cse,
-          options::OPT_equations_runtime_scheduling,
-          options::OPT_no_equations_runtime_scheduling,
-          options::OPT_omp,
-          options::OPT_no_omp,
-          options::OPT_ida_reduced_system,
-          options::OPT_no_ida_reduced_system,
-          options::OPT_ida_reduced_derivatives,
-          options::OPT_no_ida_reduced_derivatives,
-          options::OPT_ida_jacobian_one_sweep,
-          options::OPT_no_ida_jacobian_one_sweep,
-          options::OPT_print_model_info,
-          options::OPT_print_statistics
-      }
-    );
+void Marco::addMarcoOptions(const ArgList &Args, ArgStringList &CmdArgs) const {
+  Args.addAllArgs(CmdArgs, {options::OPT_g_Flag,
+                            options::OPT_mcmodel_EQ,
+                            options::OPT_mlarge_data_threshold_EQ,
+                            options::OPT_meabi,
+                            options::OPT_tune_cpu,
+                            options::OPT_target_abi,
+                            options::OPT_target_sdk_version_EQ,
+                            options::OPT_darwin_target_variant_sdk_version_EQ,
+                            options::OPT_darwin_target_variant_triple,
+                            options::OPT_target_cpu,
+                            options::OPT_target_feature,
+                            options::OPT_triple,
+                            options::OPT_target_linker_version,
+                            options::OPT_triple_EQ,
+                            options::OPT_mfpmath,
+                            options::OPT_fpadding_on_unsigned_fixed_point,
+                            options::OPT_Xomc,
+                            options::OPT_omc_path,
+                            options::OPT_omc_bypass,
+                            options::OPT_model,
+                            options::OPT_solver,
+                            options::OPT_variables_filter,
+                            options::OPT_multithreading,
+                            options::OPT_no_multithreading,
+                            options::OPT_assertions,
+                            options::OPT_no_assertions,
+                            options::OPT_bit_width,
+                            options::OPT_function_inlining,
+                            options::OPT_no_function_inlining,
+                            options::OPT_output_arrays_promotion,
+                            options::OPT_no_output_arrays_promotion,
+                            options::OPT_read_only_variables_propagation,
+                            options::OPT_no_read_only_variables_propagation,
+                            options::OPT_variables_to_parameters_promotion,
+                            options::OPT_no_variables_to_parameters_promotion,
+                            options::OPT_cse,
+                            options::OPT_no_cse,
+                            options::OPT_equations_runtime_scheduling,
+                            options::OPT_no_equations_runtime_scheduling,
+                            options::OPT_omp,
+                            options::OPT_no_omp,
+                            options::OPT_ida_reduced_system,
+                            options::OPT_no_ida_reduced_system,
+                            options::OPT_ida_reduced_derivatives,
+                            options::OPT_no_ida_reduced_derivatives,
+                            options::OPT_ida_jacobian_one_sweep,
+                            options::OPT_no_ida_jacobian_one_sweep,
+                            options::OPT_print_model_info,
+                            options::OPT_print_statistics});
 }
 
 void Marco::ConstructJob(Compilation &C, const JobAction &JA,
@@ -96,7 +89,7 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
   // Invoke ourselves in -mc1 mode.
   CmdArgs.push_back("-mc1");
 
-  if (isa<CompileJobAction>(JA) || isa<BackendJobAction>(JA)) {
+  if (isa<CompileJobAction>(JA)) {
     if (JA.getType() == types::TY_AST) {
       CmdArgs.push_back("-emit-ast");
     } else if (JA.getType() == types::TY_BaseModelica) {
@@ -107,19 +100,22 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("-emit-mlir-modelica");
     } else if (JA.getType() == types::TY_MLIR_LLVM) {
       CmdArgs.push_back("-emit-mlir-llvm");
-    } else if (JA.getType() == types::TY_LLVM_IR || JA.getType() == types::TY_LTO_IR) {
+    } else if (JA.getType() == types::TY_LLVM_IR ||
+               JA.getType() == types::TY_LTO_IR) {
       CmdArgs.push_back("-emit-llvm");
-    } else if (JA.getType() == types::TY_LLVM_BC || JA.getType() == types::TY_LTO_BC) {
+    } else if (JA.getType() == types::TY_LLVM_BC ||
+               JA.getType() == types::TY_LTO_BC) {
       CmdArgs.push_back("-emit-llvm-bc");
     } else if (JA.getType() == types::TY_PP_Asm) {
       CmdArgs.push_back("-S");
     } else {
-      assert(false && "Unexpected output type!");
+      llvm_unreachable("Unexpected output type!");
     }
-  } else if (isa<AssembleJobAction>(JA)) {
-    CmdArgs.push_back("-emit-obj");
   } else {
-    assert(false && "Unexpected action class for Marco tool.");
+    // The Backend and Assemble actions are not checked as they should be
+    // handled by clang, even though marco is theoretically capable of doing it
+    // as well.
+    llvm_unreachable("Unexpected action class for marco tool.");
   }
 
   addMarcoOptions(Args, CmdArgs);
@@ -129,7 +125,7 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
   // to avoid warn_drv_unused_argument.
   Args.getLastArg(options::OPT_fcolor_diagnostics,
                   options::OPT_fno_color_diagnostics);
-  
+
   if (D.getDiags().getDiagnosticOptions().ShowColors)
     CmdArgs.push_back("-fcolor-diagnostics");
 
@@ -183,7 +179,7 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   // Input files.
-  for (auto& input : Inputs) {
+  for (auto &input : Inputs) {
     CmdArgs.push_back(input.getFilename());
   }
 

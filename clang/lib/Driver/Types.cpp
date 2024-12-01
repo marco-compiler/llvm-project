@@ -202,8 +202,8 @@ bool types::isAcceptedByMarco(ID Id) {
   case TY_MLIR:
   case TY_MLIR_Modelica:
   case TY_MLIR_LLVM:
-  case TY_LLVM_IR:
-  case TY_LLVM_BC:
+    // Ignore LLVM-IR and Bytecode, even if capable.
+    // Leave them to clang.
     return true;
   }
 }

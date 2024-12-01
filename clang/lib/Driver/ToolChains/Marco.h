@@ -9,9 +9,9 @@
 #ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_MARCO_H
 #define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_MARCO_H
 
-#include "clang/Driver/Tool.h"
 #include "clang/Driver/Action.h"
 #include "clang/Driver/Compilation.h"
+#include "clang/Driver/Tool.h"
 #include "clang/Driver/ToolChain.h"
 #include "llvm/Option/ArgList.h"
 #include "llvm/Support/Compiler.h"
@@ -30,16 +30,17 @@ private:
   /// \param [in] Args The list of input driver arguments
   /// \param [out] CmdArgs The list of output command arguments
   void addMarcoOptions(const llvm::opt::ArgList &Args,
-                                llvm::opt::ArgStringList &CmdArgs) const;
+                       llvm::opt::ArgStringList &CmdArgs) const;
 
 public:
   Marco(const ToolChain &TC);
   ~Marco() override;
 
   bool hasGoodDiagnostics() const override { return true; }
-  bool hasIntegratedAssembler() const override { return true; }
-  bool hasIntegratedCPP() const override { return true; }
+  bool hasIntegratedAssembler() const override { return false; }
+  bool hasIntegratedBackend() const override { return false; }
   bool canEmitIR() const override { return true; }
+  bool hasIntegratedCPP() const override { return false; }
 
   void ConstructJob(Compilation &C, const JobAction &JA,
                     const InputInfo &Output, const InputInfoList &Inputs,
