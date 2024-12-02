@@ -106,9 +106,9 @@ void Marco::ConstructJob(Compilation &C, const JobAction &JA,
     } else if (JA.getType() == types::TY_LLVM_BC ||
                JA.getType() == types::TY_LTO_BC) {
       CmdArgs.push_back("-emit-llvm-bc");
-    } else if (JA.getType() == types::TY_PP_Asm) {
-      CmdArgs.push_back("-S");
     } else {
+      // Assembly files can also be emitted by the frontend, but the task is
+      // left to clang to reuse its optimizations.
       llvm_unreachable("Unexpected output type!");
     }
   } else {
