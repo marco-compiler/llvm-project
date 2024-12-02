@@ -39,7 +39,7 @@ public:
   bool hasGoodDiagnostics() const override { return true; }
   bool hasIntegratedAssembler() const override { return false; }
   bool hasIntegratedBackend() const override { return false; }
-  bool canEmitIR() const override { return true; }
+  bool canEmitIR() const override { return false; }
   bool hasIntegratedCPP() const override { return false; }
 
   void ConstructJob(Compilation &C, const JobAction &JA,
