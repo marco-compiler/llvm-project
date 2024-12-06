@@ -8698,7 +8698,7 @@ def solver : Joined<["--"], "solver=">,
     Visibility<[MarcoOption, MC1Option]>,
     HelpText<"Solver (possible options: euler-forward, ida, rk4, rk-euler-forward, rk-midpoint, rk-heun, rk-ralston, rk-heun-euler, rk-bogacki-shampine, rk-fehlberg, rk-cash-karp, rk-dormand-prince, rk-euler-backward)">;
 
-def variables_filter : Joined<["--"], "variables-filter=">,
+def variable_filter : Joined<["--"], "variable-filter=">,
     Group<Simulation_Group>,
     Visibility<[MarcoOption, MC1Option]>,
     HelpText<"Filter for the variables to be printed">;

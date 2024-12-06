@@ -46,7 +46,7 @@ void Marco::addMarcoOptions(const ArgList &Args, ArgStringList &CmdArgs) const {
                             options::OPT_omc_bypass,
                             options::OPT_model,
                             options::OPT_solver,
-                            options::OPT_variables_filter,
+                            options::OPT_variable_filter,
                             options::OPT_multithreading,
                             options::OPT_no_multithreading,
                             options::OPT_assertions,
