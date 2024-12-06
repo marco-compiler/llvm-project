@@ -8777,6 +8777,14 @@ defm cse : BoolOption<"", "cse",
     BothFlags<[], [MC1Option], " common subexpression elimination">>,
     Group<MarcoCodegen_Group>;
 
+defm function_calls_cse : BoolOption<"", "function-calls-cse",
+    MarcoCodegenOpts<"CSE">,
+    DefaultFalse,
+    PosFlag<SetTrue, [], [], "Enable">,
+    NegFlag<SetFalse, [], [], "Disable">,
+    BothFlags<[], [MC1Option], " the creation of additional variables for function calls CSE">>,
+    Group<MarcoCodegen_Group>;
+
 defm equations_runtime_scheduling : BoolOption<"", "equations-runtime-scheduling",
     MarcoCodegenOpts<"Equations runtime scheduling">,
     DefaultFalse,

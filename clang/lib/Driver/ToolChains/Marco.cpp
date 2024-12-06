@@ -62,6 +62,8 @@ void Marco::addMarcoOptions(const ArgList &Args, ArgStringList &CmdArgs) const {
                             options::OPT_no_variables_to_parameters_promotion,
                             options::OPT_cse,
                             options::OPT_no_cse,
+                            options::OPT_function_calls_cse,
+                            options::OPT_no_function_calls_cse,
                             options::OPT_equations_runtime_scheduling,
                             options::OPT_no_equations_runtime_scheduling,
                             options::OPT_omp,
