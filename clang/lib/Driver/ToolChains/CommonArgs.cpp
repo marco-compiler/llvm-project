@@ -1354,12 +1354,6 @@ void tools::addMarcoLinkerArgs(const ToolChain &TC,
                                llvm::opt::ArgStringList &CmdArgs) {
   bool staticBuild = Args.hasArg(options::OPT_static);
 
-  if (staticBuild) {
-    CmdArgs.push_back("-Bstatic");
-  } else {
-    CmdArgs.push_back("-Bdynamic");
-  }
-
   // Get the name of the requested solver.
   auto solver = Args.getLastArgValue(options::OPT_solver, "euler-forward");
 
