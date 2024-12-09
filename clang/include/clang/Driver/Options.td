@@ -8832,3 +8832,15 @@ def print_model_info : Flag<["--"], "print-model-info">,
 def print_statistics : Flag<["--"], "print-statistics">,
   Visibility<[MC1Option]>,
   HelpText<"Print compilation statistics">;
+
+def print_ir_before_pass : Joined<["--"], "print-ir-before-pass=">,
+    Visibility<[MC1Option]>,
+    HelpText<"Print the IR before a certain pass">;
+
+def print_ir_after_pass : Joined<["--"], "print-ir-after-pass=">,
+    Visibility<[MC1Option]>,
+    HelpText<"Print the IR after a certain pass">;
+
+def print_ir_on_failure : Flag<["--"], "print-ir-on-failure">,
+  Visibility<[MC1Option]>,
+  HelpText<"Print information about the model being compiled">;
