@@ -1363,7 +1363,11 @@ void tools::addMarcoLinkerArgs(const ToolChain &TC,
   }
 
   // Add the main simulation driver.
-  CmdArgs.push_back("-lMARCORuntimeSimulation");
+  if (staticBuild) {
+    CmdArgs.push_back("-lMARCORuntimeSimulation_static");
+  } else {
+    CmdArgs.push_back("-lMARCORuntimeSimulation");
+  }
 
   // Add the libraries of the solver.
   if (solver == "euler-forward") {
@@ -1375,6 +1379,10 @@ void tools::addMarcoLinkerArgs(const ToolChain &TC,
   } else if (solver == "rk4" || solver.starts_with("rk-")) {
     CmdArgs.push_back("-lMARCORuntimeDriverRungeKutta");
     CmdArgs.push_back("-lMARCORuntimeSolverRungeKutta");
+  }
+
+  if (!staticBuild) {
+    CmdArgs.push_back("-lMARCORuntimeDriverKINSOL");
   }
 
   // Add the Modelica support library.
