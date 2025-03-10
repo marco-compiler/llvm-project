@@ -8844,3 +8844,7 @@ def print_ir_after_pass : Joined<["--"], "print-ir-after-pass=">,
 def print_ir_on_failure : Flag<["--"], "print-ir-on-failure">,
   Visibility<[MC1Option]>,
   HelpText<"Print information about the model being compiled">;
+
+def emit_verification_model : Joined<["--"], "emit-verification-model=">,
+  Visibility<[MC1Option]>,
+  HelpText<"Emit an MLIR file to the specified path that can be used to verify the output of the simulation">;
