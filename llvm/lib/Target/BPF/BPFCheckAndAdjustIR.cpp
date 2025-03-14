@@ -15,15 +15,13 @@
 //   - remove llvm.bpf.getelementptr.and.load builtins.
 //   - remove llvm.bpf.getelementptr.and.store builtins.
 //   - for loads and stores with base addresses from non-zero address space
-//     cast base address to zero address space (support for BPF arenas).
+//     cast base address to zero address space (support for BPF address spaces).
 //
 //===----------------------------------------------------------------------===//
 
 #include "BPF.h"
 #include "BPFCORE.h"
-#include "BPFTargetMachine.h"
 #include "llvm/Analysis/LoopInfo.h"
-#include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instruction.h"
@@ -31,7 +29,6 @@
 #include "llvm/IR/IntrinsicsBPF.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
-#include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
 #include "llvm/Pass.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
@@ -164,7 +161,7 @@ bool BPFCheckAndAdjustIR::removeCompareBuiltin(Module &M) {
         CmpInst::Predicate Opcode = (CmpInst::Predicate)OpVal;
 
         auto *ICmp = new ICmpInst(Opcode, Arg1, Arg2);
-        ICmp->insertBefore(Call);
+        ICmp->insertBefore(Call->getIterator());
 
         Call->replaceAllUsesWith(ICmp);
         ToBeDeleted = Call;
@@ -370,16 +367,16 @@ void BPFCheckAndAdjustIR::getAnalysisUsage(AnalysisUsage &AU) const {
 
 static void unrollGEPLoad(CallInst *Call) {
   auto [GEP, Load] = BPFPreserveStaticOffsetPass::reconstructLoad(Call);
-  GEP->insertBefore(Call);
-  Load->insertBefore(Call);
+  GEP->insertBefore(Call->getIterator());
+  Load->insertBefore(Call->getIterator());
   Call->replaceAllUsesWith(Load);
   Call->eraseFromParent();
 }
 
 static void unrollGEPStore(CallInst *Call) {
   auto [GEP, Store] = BPFPreserveStaticOffsetPass::reconstructStore(Call);
-  GEP->insertBefore(Call);
-  Store->insertBefore(Call);
+  GEP->insertBefore(Call->getIterator());
+  Store->insertBefore(Call->getIterator());
   Call->eraseFromParent();
 }
 
@@ -439,8 +436,8 @@ static Value *aspaceWrapValue(DenseMap<Value *, Value *> &Cache, Function *F,
     Value *WrappedPtr = aspaceWrapValue(Cache, F, Ptr);
     auto *GEPTy = cast<PointerType>(GEP->getType());
     auto *NewGEP = GEP->clone();
-    NewGEP->insertAfter(GEP);
-    NewGEP->mutateType(GEPTy->getPointerTo(0));
+    NewGEP->insertAfter(GEP->getIterator());
+    NewGEP->mutateType(PointerType::getUnqual(GEPTy->getContext()));
     NewGEP->setOperand(GEP->getPointerOperandIndex(), WrappedPtr);
     NewGEP->setName(GEP->getName());
     Cache[ToWrap] = NewGEP;
@@ -452,8 +449,7 @@ static Value *aspaceWrapValue(DenseMap<Value *, Value *> &Cache, Function *F,
     IB.SetInsertPoint(*InsnPtr->getInsertionPointAfterDef());
   else
     IB.SetInsertPoint(F->getEntryBlock().getFirstInsertionPt());
-  auto *PtrTy = cast<PointerType>(ToWrap->getType());
-  auto *ASZeroPtrTy = PtrTy->getPointerTo(0);
+  auto *ASZeroPtrTy = IB.getPtrTy(0);
   auto *ACast = IB.CreateAddrSpaceCast(ToWrap, ASZeroPtrTy, ToWrap->getName());
   Cache[ToWrap] = ACast;
   return ACast;
@@ -482,7 +478,7 @@ static void aspaceWrapOperand(DenseMap<Value *, Value *> &Cache, Instruction *I,
   }
 }
 
-// Support for BPF arenas:
+// Support for BPF address spaces:
 // - for each function in the module M, update pointer operand of
 //   each memory access instruction (load/store/cmpxchg/atomicrmw)
 //   by casting it from non-zero address space to zero address space, e.g:
@@ -490,7 +486,7 @@ static void aspaceWrapOperand(DenseMap<Value *, Value *> &Cache, Instruction *I,
 //   (load (ptr addrspace (N) %p) ...)
 //     -> (load (addrspacecast ptr addrspace (N) %p to ptr))
 //
-// - assign section with name .arena.N for globals defined in
+// - assign section with name .addr_space.N for globals defined in
 //   non-zero address space N
 bool BPFCheckAndAdjustIR::insertASpaceCasts(Module &M) {
   bool Changed = false;
@@ -517,13 +513,13 @@ bool BPFCheckAndAdjustIR::insertASpaceCasts(Module &M) {
     Changed |= !CastsCache.empty();
   }
   // Merge all globals within same address space into single
-  // .arena.<addr space no> section
+  // .addr_space.<addr space no> section
   for (GlobalVariable &G : M.globals()) {
     if (G.getAddressSpace() == 0 || G.hasSection())
       continue;
     SmallString<16> SecName;
     raw_svector_ostream OS(SecName);
-    OS << ".arena." << G.getAddressSpace();
+    OS << ".addr_space." << G.getAddressSpace();
     G.setSection(SecName);
     // Prevent having separate section for constants
     G.setConstant(false);

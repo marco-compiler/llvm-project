@@ -103,7 +103,6 @@ define <4 x i16> @vec_8xi16_extract_4xi16(ptr addrspace(1) %p0, ptr addrspace(1)
 ; GFX9-NEXT:    global_load_dwordx4 v[2:5], v[0:1], off glc
 ; GFX9-NEXT:    s_waitcnt vmcnt(0)
 ; GFX9-NEXT:  .LBB0_4: ; %exit
-; GFX9-NEXT:    s_waitcnt vmcnt(0)
 ; GFX9-NEXT:    v_pk_ashrrev_i16 v0, 15, v3 op_sel_hi:[0,0]
 ; GFX9-NEXT:    s_movk_i32 s4, 0x8000
 ; GFX9-NEXT:    v_or_b32_e32 v1, 0xffff8000, v0
@@ -131,7 +130,6 @@ define <4 x i16> @vec_8xi16_extract_4xi16(ptr addrspace(1) %p0, ptr addrspace(1)
 ; GFX11-NEXT:    global_load_b128 v[2:5], v[0:1], off glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB0_4: ; %exit
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v0, 15, v2 op_sel_hi:[0,1]
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v1, 15, v3 op_sel_hi:[0,0]
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_2) | instskip(NEXT) | instid1(VALU_DEP_2)
@@ -158,7 +156,7 @@ F:
 
 exit:
   %m = phi <8 x i16> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <8 x i16> %m, <8 x i16> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
+  %v2 = shufflevector <8 x i16> %m, <8 x i16> poison, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
   %b2 = icmp sgt <4 x i16> %v2, <i16 -1, i16 -1, i16 -1, i16 -1>
   %r2 = select <4 x i1> %b2, <4 x i16> <i16 -32768, i16 -32768, i16 -32768, i16 -32768>, <4 x i16> <i16 -1, i16 -1, i16 -1, i16 -1>
   ret <4 x i16> %r2
@@ -266,7 +264,6 @@ define <4 x i16> @vec_8xi16_extract_4xi16_2(ptr addrspace(1) %p0, ptr addrspace(
 ; GFX9-NEXT:    global_load_dwordx4 v[2:5], v[0:1], off glc
 ; GFX9-NEXT:    s_waitcnt vmcnt(0)
 ; GFX9-NEXT:  .LBB1_4: ; %exit
-; GFX9-NEXT:    s_waitcnt vmcnt(0)
 ; GFX9-NEXT:    v_pk_ashrrev_i16 v0, 15, v5 op_sel_hi:[0,1]
 ; GFX9-NEXT:    s_movk_i32 s4, 0x8000
 ; GFX9-NEXT:    v_or_b32_e32 v1, 0xffff8000, v0
@@ -294,7 +291,6 @@ define <4 x i16> @vec_8xi16_extract_4xi16_2(ptr addrspace(1) %p0, ptr addrspace(
 ; GFX11-NEXT:    global_load_b128 v[2:5], v[0:1], off glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB1_4: ; %exit
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v0, 15, v4 op_sel_hi:[0,1]
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v1, 15, v5 op_sel_hi:[0,1]
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_2) | instskip(NEXT) | instid1(VALU_DEP_2)
@@ -321,7 +317,7 @@ F:
 
 exit:
   %m = phi <8 x i16> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <8 x i16> %m, <8 x i16> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %v2 = shufflevector <8 x i16> %m, <8 x i16> poison, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
   %b2 = icmp sgt <4 x i16> %v2, <i16 -1, i16 -1, i16 -1, i16 -1>
   %r2 = select <4 x i1> %b2, <4 x i16> <i16 -32768, i16 -32768, i16 -32768, i16 -32768>, <4 x i16> <i16 -1, i16 -1, i16 -1, i16 -1>
   ret <4 x i16> %r2
@@ -431,7 +427,6 @@ define <4 x half> @vec_8xf16_extract_4xf16(ptr addrspace(1) %p0, ptr addrspace(1
 ; GFX9-NEXT:  .LBB2_4: ; %exit
 ; GFX9-NEXT:    v_mov_b32_e32 v0, 0x3900
 ; GFX9-NEXT:    v_mov_b32_e32 v1, 0x3d00
-; GFX9-NEXT:    s_waitcnt vmcnt(0)
 ; GFX9-NEXT:    v_cmp_ge_f16_e32 vcc, 0.5, v2
 ; GFX9-NEXT:    v_mov_b32_e32 v5, 0x3800
 ; GFX9-NEXT:    v_cndmask_b32_e32 v4, v0, v1, vcc
@@ -461,7 +456,6 @@ define <4 x half> @vec_8xf16_extract_4xf16(ptr addrspace(1) %p0, ptr addrspace(1
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB2_4: ; %exit
 ; GFX11-NEXT:    v_mov_b32_e32 v0, 0x3d00
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_lshrrev_b32_e32 v1, 16, v2
 ; GFX11-NEXT:    v_cmp_ge_f16_e32 vcc_lo, 0.5, v2
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_3) | instskip(NEXT) | instid1(VALU_DEP_3)
@@ -488,7 +482,7 @@ F:
 
 exit:
   %m = phi <8 x half> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <8 x half> %m, <8 x half> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
+  %v2 = shufflevector <8 x half> %m, <8 x half> poison, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
   %b2 = fcmp ugt <4 x half> %v2, <half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800>
   %r2 = select <4 x i1> %b2, <4 x half> <half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900>, <4 x half> <half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00>
   ret <4 x half> %r2
@@ -665,7 +659,6 @@ define <4 x i16> @vec_16xi16_extract_4xi16(ptr addrspace(1) %p0, ptr addrspace(1
 ; GFX11-NEXT:    global_load_b128 v[2:5], v[0:1], off glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB3_4: ; %exit
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v0, 15, v2 op_sel_hi:[0,1]
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v1, 15, v3 op_sel_hi:[0,0]
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_2) | instskip(NEXT) | instid1(VALU_DEP_2)
@@ -692,7 +685,7 @@ F:
 
 exit:
   %m = phi <16 x i16> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <16 x i16> %m, <16 x i16> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
+  %v2 = shufflevector <16 x i16> %m, <16 x i16> poison, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
   %b2 = icmp sgt <4 x i16> %v2, <i16 -1, i16 -1, i16 -1, i16 -1>
   %r2 = select <4 x i1> %b2, <4 x i16> <i16 -32768, i16 -32768, i16 -32768, i16 -32768>, <4 x i16> <i16 -1, i16 -1, i16 -1, i16 -1>
   ret <4 x i16> %r2
@@ -871,7 +864,6 @@ define <4 x i16> @vec_16xi16_extract_4xi16_2(ptr addrspace(1) %p0, ptr addrspace
 ; GFX11-NEXT:    global_load_b128 v[2:5], v[0:1], off glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB4_4: ; %exit
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v0, 15, v4 op_sel_hi:[0,1]
 ; GFX11-NEXT:    v_pk_ashrrev_i16 v1, 15, v5 op_sel_hi:[0,1]
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_2) | instskip(NEXT) | instid1(VALU_DEP_2)
@@ -898,7 +890,7 @@ F:
 
 exit:
   %m = phi <16 x i16> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <16 x i16> %m, <16 x i16> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %v2 = shufflevector <16 x i16> %m, <16 x i16> poison, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
   %b2 = icmp sgt <4 x i16> %v2, <i16 -1, i16 -1, i16 -1, i16 -1>
   %r2 = select <4 x i1> %b2, <4 x i16> <i16 -32768, i16 -32768, i16 -32768, i16 -32768>, <4 x i16> <i16 -1, i16 -1, i16 -1, i16 -1>
   ret <4 x i16> %r2
@@ -1081,7 +1073,6 @@ define <4 x half> @vec_16xf16_extract_4xf16(ptr addrspace(1) %p0, ptr addrspace(
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB5_4: ; %exit
 ; GFX11-NEXT:    v_mov_b32_e32 v0, 0x3d00
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_lshrrev_b32_e32 v1, 16, v2
 ; GFX11-NEXT:    v_cmp_ge_f16_e32 vcc_lo, 0.5, v2
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_3) | instskip(NEXT) | instid1(VALU_DEP_3)
@@ -1108,7 +1099,7 @@ F:
 
 exit:
   %m = phi <16 x half> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <16 x half> %m, <16 x half> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
+  %v2 = shufflevector <16 x half> %m, <16 x half> poison, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
   %b2 = fcmp ugt <4 x half> %v2, <half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800>
   %r2 = select <4 x i1> %b2, <4 x half> <half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900>, <4 x half> <half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00>
   ret <4 x half> %r2
@@ -1193,8 +1184,8 @@ define <8 x i16> @large_vector(ptr addrspace(3) %p, i32 %idxp) {
   %x.7 = load i16, ptr addrspace(3) %p.7, align 2
   %v3 = insertelement <8 x i16> %v3p, i16 %x.7, i32 1
 
-  %z.1 = shufflevector <8 x i16> %v0, <8 x i16> %v1, <8 x i32> <i32 0, i32 1, i32 8, i32 9, i32 undef, i32 undef, i32 undef, i32 undef>
-  %z.2 = shufflevector <8 x i16> %z.1, <8 x i16> %v2, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 undef, i32 undef>
+  %z.1 = shufflevector <8 x i16> %v0, <8 x i16> %v1, <8 x i32> <i32 0, i32 1, i32 8, i32 9, i32 poison, i32 poison, i32 poison, i32 poison>
+  %z.2 = shufflevector <8 x i16> %z.1, <8 x i16> %v2, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 poison, i32 poison>
   %z.3 = shufflevector <8 x i16> %z.2, <8 x i16> %v3, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 8, i32 9>
   ret <8 x i16> %z.3
 }
@@ -1432,7 +1423,6 @@ define amdgpu_gfx <8 x i16> @vec_16xi16_extract_8xi16_0(i1 inreg %cond, ptr addr
 ; GFX11-NEXT:    global_load_b128 v[2:5], v[0:1], off glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB7_4: ; %exit
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_cmp_gt_u16_e32 vcc_lo, 0x3801, v5
 ; GFX11-NEXT:    v_mov_b32_e32 v9, 0x3900
 ; GFX11-NEXT:    v_mov_b32_e32 v1, 0x3d00
@@ -1474,7 +1464,7 @@ F:
 
 exit:
   %m = phi <16 x i16> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <16 x i16> %m, <16 x i16> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+  %v2 = shufflevector <16 x i16> %m, <16 x i16> poison, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
   %b2 = icmp ugt <8 x i16> %v2, <i16 u0x3800, i16 u0x3800, i16 u0x3800, i16 u0x3800, i16 u0x3800, i16 u0x3800, i16 u0x3800, i16 u0x3800>
   %r2 = select <8 x i1> %b2, <8 x i16> <i16 u0x3900, i16 u0x3900, i16 u0x3900, i16 u0x3900, i16 u0x3900, i16 u0x3900, i16 u0x3900, i16 u0x3900>, <8 x i16> <i16 u0x3D00, i16 u0x3D00, i16 u0x3D00, i16 u0x3D00, i16 u0x3D00, i16 u0x3D00, i16 u0x3D00, i16 u0x3D00>
   ret <8 x i16> %r2
@@ -1724,7 +1714,6 @@ define amdgpu_gfx <8 x half> @vec_16xf16_extract_8xf16_0(i1 inreg %cond, ptr add
 ; GFX11-NEXT:    global_load_b128 v[2:5], v[0:1], off glc dlc
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:  .LBB8_4: ; %exit
-; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_cmp_ge_f16_e32 vcc_lo, 0.5, v5
 ; GFX11-NEXT:    v_mov_b32_e32 v9, 0x3900
 ; GFX11-NEXT:    v_mov_b32_e32 v1, 0x3d00
@@ -1766,7 +1755,7 @@ F:
 
 exit:
   %m = phi <16 x half> [ %t, %T ], [ %f, %F ]
-  %v2 = shufflevector <16 x half> %m, <16 x half> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
+  %v2 = shufflevector <16 x half> %m, <16 x half> poison, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
   %b2 = fcmp ugt <8 x half> %v2, <half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800>
   %r2 = select <8 x i1> %b2, <8 x half> <half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900>, <8 x half> <half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00>
   ret <8 x half> %r2

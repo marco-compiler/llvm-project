@@ -20,25 +20,6 @@
 
 using namespace mlir;
 
-/// Generate an error message string for the given op and the specified error.
-static std::string generateErrorMessage(Operation *op, const std::string &msg) {
-  std::string buffer;
-  llvm::raw_string_ostream stream(buffer);
-  OpPrintingFlags flags;
-  // We may generate a lot of error messages and so we need to ensure the
-  // printing is fast.
-  flags.elideLargeElementsAttrs();
-  flags.printGenericOpForm();
-  flags.skipRegions();
-  flags.useLocalScope();
-  stream << "ERROR: Runtime op verification failed\n";
-  op->print(stream, flags);
-  stream << "\n^ " << msg;
-  stream << "\nLocation: ";
-  op->getLoc().print(stream);
-  return stream.str();
-}
-
 namespace mlir {
 namespace memref {
 namespace {
@@ -62,8 +43,10 @@ struct CastOpInterface
           builder.create<arith::ConstantIndexOp>(loc, resultType.getRank());
       Value isSameRank = builder.create<arith::CmpIOp>(
           loc, arith::CmpIPredicate::eq, srcRank, resultRank);
-      builder.create<cf::AssertOp>(loc, isSameRank,
-                                   generateErrorMessage(op, "rank mismatch"));
+      builder.create<cf::AssertOp>(
+          loc, isSameRank,
+          RuntimeVerifiableOpInterface::generateErrorMessage(op,
+                                                             "rank mismatch"));
     }
 
     // Get source offset and strides. We do not have an op to get offsets and
@@ -101,14 +84,14 @@ struct CastOpInterface
           loc, arith::CmpIPredicate::eq, srcDimSz, resultDimSz);
       builder.create<cf::AssertOp>(
           loc, isSameSz,
-          generateErrorMessage(op, "size mismatch of dim " +
-                                       std::to_string(it.index())));
+          RuntimeVerifiableOpInterface::generateErrorMessage(
+              op, "size mismatch of dim " + std::to_string(it.index())));
     }
 
     // Get result offset and strides.
     int64_t resultOffset;
     SmallVector<int64_t> resultStrides;
-    if (failed(getStridesAndOffset(resultType, resultStrides, resultOffset)))
+    if (failed(resultType.getStridesAndOffset(resultStrides, resultOffset)))
       return;
 
     // Check offset.
@@ -119,8 +102,10 @@ struct CastOpInterface
           builder.create<arith::ConstantIndexOp>(loc, resultOffset);
       Value isSameOffset = builder.create<arith::CmpIOp>(
           loc, arith::CmpIPredicate::eq, srcOffset, resultOffsetVal);
-      builder.create<cf::AssertOp>(loc, isSameOffset,
-                                   generateErrorMessage(op, "offset mismatch"));
+      builder.create<cf::AssertOp>(
+          loc, isSameOffset,
+          RuntimeVerifiableOpInterface::generateErrorMessage(
+              op, "offset mismatch"));
     }
 
     // Check strides.
@@ -137,8 +122,52 @@ struct CastOpInterface
           loc, arith::CmpIPredicate::eq, srcStride, resultStrideVal);
       builder.create<cf::AssertOp>(
           loc, isSameStride,
-          generateErrorMessage(op, "stride mismatch of dim " +
-                                       std::to_string(it.index())));
+          RuntimeVerifiableOpInterface::generateErrorMessage(
+              op, "stride mismatch of dim " + std::to_string(it.index())));
+    }
+  }
+};
+
+struct CopyOpInterface
+    : public RuntimeVerifiableOpInterface::ExternalModel<CopyOpInterface,
+                                                         CopyOp> {
+  void generateRuntimeVerification(Operation *op, OpBuilder &builder,
+                                   Location loc) const {
+    auto copyOp = cast<CopyOp>(op);
+    BaseMemRefType sourceType = copyOp.getSource().getType();
+    BaseMemRefType targetType = copyOp.getTarget().getType();
+    auto rankedSourceType = dyn_cast<MemRefType>(sourceType);
+    auto rankedTargetType = dyn_cast<MemRefType>(targetType);
+
+    // TODO: Verification for unranked memrefs is not supported yet.
+    if (!rankedSourceType || !rankedTargetType)
+      return;
+
+    assert(sourceType.getRank() == targetType.getRank() && "rank mismatch");
+    for (int64_t i = 0, e = sourceType.getRank(); i < e; ++i) {
+      // Fully static dimensions in both source and target operand are already
+      // verified by the op verifier.
+      if (!rankedSourceType.isDynamicDim(i) &&
+          !rankedTargetType.isDynamicDim(i))
+        continue;
+      auto getDimSize = [&](Value memRef, MemRefType type,
+                            int64_t dim) -> Value {
+        return type.isDynamicDim(dim)
+                   ? builder.create<DimOp>(loc, memRef, dim).getResult()
+                   : builder
+                         .create<arith::ConstantIndexOp>(loc,
+                                                         type.getDimSize(dim))
+                         .getResult();
+      };
+      Value sourceDim = getDimSize(copyOp.getSource(), rankedSourceType, i);
+      Value targetDim = getDimSize(copyOp.getTarget(), rankedTargetType, i);
+      Value sameDimSize = builder.create<arith::CmpIOp>(
+          loc, arith::CmpIPredicate::eq, sourceDim, targetDim);
+      builder.create<cf::AssertOp>(
+          loc, sameDimSize,
+          RuntimeVerifiableOpInterface::generateErrorMessage(
+              op, "size of " + std::to_string(i) +
+                      "-th source/target dim does not match"));
     }
   }
 };
@@ -178,7 +207,9 @@ struct LoadStoreOpInterface
                 : andOp;
     }
     builder.create<cf::AssertOp>(
-        loc, assertCond, generateErrorMessage(op, "out-of-bounds access"));
+        loc, assertCond,
+        RuntimeVerifiableOpInterface::generateErrorMessage(
+            op, "out-of-bounds access"));
   }
 };
 
@@ -248,7 +279,7 @@ struct ReinterpretCastOpInterface
 
     builder.create<cf::AssertOp>(
         loc, assertCond,
-        generateErrorMessage(
+        RuntimeVerifiableOpInterface::generateErrorMessage(
             op,
             "result of reinterpret_cast is out-of-bounds of the base memref"));
   }
@@ -293,8 +324,8 @@ struct SubViewOpInterface
 
     builder.create<cf::AssertOp>(
         loc, assertCond,
-        generateErrorMessage(op,
-                             "subview is out-of-bounds of the base memref"));
+        RuntimeVerifiableOpInterface::generateErrorMessage(
+            op, "subview is out-of-bounds of the base memref"));
   }
 };
 
@@ -334,8 +365,9 @@ struct ExpandShapeOpInterface
           builder.create<arith::ConstantIndexOp>(loc, 0));
       builder.create<cf::AssertOp>(
           loc, isModZero,
-          generateErrorMessage(op, "static result dims in reassoc group do not "
-                                   "divide src dim evenly"));
+          RuntimeVerifiableOpInterface::generateErrorMessage(
+              op, "static result dims in reassoc group do not "
+                  "divide src dim evenly"));
     }
   }
 };
@@ -347,6 +379,7 @@ void mlir::memref::registerRuntimeVerifiableOpInterfaceExternalModels(
     DialectRegistry &registry) {
   registry.addExtension(+[](MLIRContext *ctx, memref::MemRefDialect *dialect) {
     CastOp::attachInterface<CastOpInterface>(*ctx);
+    CopyOp::attachInterface<CopyOpInterface>(*ctx);
     ExpandShapeOp::attachInterface<ExpandShapeOpInterface>(*ctx);
     LoadOp::attachInterface<LoadStoreOpInterface<LoadOp>>(*ctx);
     ReinterpretCastOp::attachInterface<ReinterpretCastOpInterface>(*ctx);

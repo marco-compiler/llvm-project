@@ -1,4 +1,5 @@
 ; RUN: opt -mtriple=amdgcn-- -S -structurizecfg -si-annotate-control-flow -simplifycfg-require-and-preserve-domtree=1 %s | FileCheck -check-prefix=OPT %s
+; RUN: opt -mtriple=amdgcn-- -S -passes=structurizecfg,si-annotate-control-flow -simplifycfg-require-and-preserve-domtree=1 %s | FileCheck -check-prefix=OPT %s
 ; RUN: llc -mtriple=amdgcn -verify-machineinstrs -simplifycfg-require-and-preserve-domtree=1 < %s | FileCheck -check-prefix=GCN %s
 
 
@@ -52,7 +53,7 @@ bb1:                                              ; preds = %bb
   %tmp3 = getelementptr inbounds <4 x float>, ptr addrspace(1) %arg, i64 %tmp2
   %tmp4 = load <4 x float>, ptr addrspace(1) %tmp3, align 16
   %tmp5 = extractelement <4 x float> %tmp4, i32 1
-  store volatile <4 x float> %tmp4, ptr addrspace(1) undef
+  store volatile <4 x float> %tmp4, ptr addrspace(1) poison
   %cmp = fcmp ogt float %tmp5, 1.0
   br i1 %cmp, label %bb5, label %bb3
 

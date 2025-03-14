@@ -1,4 +1,4 @@
-; RUN: llc -march=bpfel -mcpu=v4 < %s | FileCheck %s
+; RUN: llc -mtriple=bpfel -mcpu=v4 < %s | FileCheck %s
 
 ; Generated from the following C code:
 ;
@@ -18,7 +18,7 @@
 
 ; Verify that a,b,c reside in the same section
 
-; CHECK:     .section .arena.272,"aw",@progbits
+; CHECK:     .section .addr_space.272,"aw",@progbits
 ; CHECK-NOT: .section
 ; CHECK:     .globl  a
 ; CHECK:     .ascii  "\001\002"

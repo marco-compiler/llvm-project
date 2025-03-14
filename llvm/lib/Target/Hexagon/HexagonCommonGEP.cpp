@@ -37,7 +37,6 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/Local.h"
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -605,8 +604,10 @@ void HexagonCommonGEP::common() {
       uint32_t NF = N->Flags;
       // If N is used, append all original values of N to the list of
       // original values of Min.
-      if (NF & GepNode::Used)
-        MinUs.insert(Uses[N].begin(), Uses[N].end());
+      if (NF & GepNode::Used) {
+        auto &U = Uses[N];
+        MinUs.insert(U.begin(), U.end());
+      }
       Flags |= NF;
     }
     if (MinUs.empty())
@@ -1109,7 +1110,7 @@ Value *HexagonCommonGEP::fabricateGEP(NodeVect &NA, BasicBlock::iterator At,
           break;
       }
     }
-    NewInst = GetElementPtrInst::Create(InpTy, Input, IdxList, "cgep", &*At);
+    NewInst = GetElementPtrInst::Create(InpTy, Input, IdxList, "cgep", At);
     NewInst->setIsInBounds(RN->Flags & GepNode::InBounds);
     LLVM_DEBUG(dbgs() << "new GEP: " << *NewInst << '\n');
     if (Idx < Num) {
