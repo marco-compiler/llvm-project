@@ -757,9 +757,6 @@ def gcc_toolchain : Joined<["--"], "gcc-toolchain=">, Flags<[NoXarchOption]>,
   HelpText<
     "Specify a directory where Clang can find 'include' and 'lib{,32,64}/gcc{,-cross}/$triple/$version'. "
     "Clang will use the GCC installation with the largest version">,
-  HelpTextForVariants<[FlangOption],
-    "Specify a directory where Flang can find 'lib{,32,64}/gcc{,-cross}/$triple/$version'. "
-    "Flang will use the GCC installation with the largest version">,
   HelpTextForVariants<[MarcoOption],
     "Specify a directory where MARCO can find 'lib{,32,64}/gcc{,-cross}/$triple/$version'. "
     "MARCO will use the GCC installation with the largest version">;
