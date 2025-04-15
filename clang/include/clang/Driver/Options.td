@@ -345,10 +345,6 @@ class TargetOpts<string base>
   : KeyPathAndMacro<"TargetOpts->", base, "TARGET_"> {}
 class FrontendOpts<string base>
   : KeyPathAndMacro<"FrontendOpts.", base, "FRONTEND_"> {}
-class MarcoCodegenOpts<string base>
-    : KeyPathAndMacro<"MarcoCodegenOpts.", base, "MARCO_CODEGEN_"> {}
-class MarcoLinkOpts<string base>
-    : KeyPathAndMacro<"MarcoLinkOpts.", base, "MARCO_LINK_"> {}
 class PreprocessorOutputOpts<string base>
   : KeyPathAndMacro<"PreprocessorOutputOpts.", base, "PREPROCESSOR_OUTPUT_"> {}
 class DependencyOutputOpts<string base>
@@ -9141,9 +9137,7 @@ def : Joined<["-"], "Xmarco=">,
   HelpText<"Alias for -Xmarco">,
   MetaVarName<"<arg>">;
 
-defm link_runtime_main : BoolOption<"", "link-runtime-main",
-    MarcoLinkOpts<"Link the runtime library starting the simulation">,
-    DefaultTrue,
+defm link_runtime_main : BoolOptionWithoutMarshalling<"", "link-runtime-main",
     PosFlag<SetTrue, [], [], "Link">,
     NegFlag<SetFalse, [], [], "Don't link">,
     BothFlags<[], [MarcoOption], " the runtime library providing the main function starting the simulation">>;
@@ -9216,16 +9210,12 @@ def variable_filter : Joined<["--"], "variable-filter=">,
     Visibility<[MarcoOption, MC1Option]>,
     HelpText<"Filter for the variables to be printed">;
 
-defm multithreading : BoolOption<"", "multithreading",
-    MarcoCodegenOpts<"Compiler multithreading">,
-    DefaultTrue,
+defm multithreading : BoolOptionWithoutMarshalling<"", "multithreading",
     PosFlag<SetTrue, [], [], "Use">,
     NegFlag<SetFalse, [], [], "Don't use">,
     BothFlags<[], [MC1Option], " multithreading during compilation">>;
 
-defm assertions : BoolOption<"", "assertions",
-    MarcoCodegenOpts<"Assertions">,
-    DefaultTrue,
+defm assertions : BoolOptionWithoutMarshalling<"", "assertions",
     PosFlag<SetTrue, [], [], "Generate">,
     NegFlag<SetFalse, [], [], "Don't generate">,
     BothFlags<[], [MC1Option], " assertions">>,
@@ -9236,115 +9226,89 @@ def bit_width : Joined<["--"], "bit-width=">,
     Group<MarcoCodegen_Group>,
     HelpText<"Set the bit-width of the simulation data">;
 
-defm function_inlining : BoolOption<"", "inlining",
-    MarcoCodegenOpts<"Function inlining">,
-    DefaultFalse,
+defm function_inlining : BoolOptionWithoutMarshalling<"", "inlining",
     PosFlag<SetTrue, [], [], "Inline functions when suggested by the annotations">,
     NegFlag<SetFalse, [], [], "Never inline functions">,
     BothFlags<[], [MC1Option], "">>,
     Group<MarcoCodegen_Group>;
 
-defm output_arrays_promotion : BoolOption<"", "output-arrays-promotion",
-    MarcoCodegenOpts<"Output arrays promotion">,
-    DefaultFalse,
+defm output_arrays_promotion : BoolOptionWithoutMarshalling<"", "output-arrays-promotion",
     PosFlag<SetTrue, [], [], "Convert">,
     NegFlag<SetFalse, [], [], "Don't convert">,
     BothFlags<[], [MC1Option], " output arrays into arguments to delegate the allocation to the caller">>,
     Group<MarcoCodegen_Group>;
 
-defm read_only_variables_propagation : BoolOption<"", "read-only-variables-propagation",
-    MarcoCodegenOpts<"Read-only variables propagation">,
-    DefaultTrue,
+defm read_only_variables_propagation : BoolOptionWithoutMarshalling<"", "read-only-variables-propagation",
     PosFlag<SetTrue, [], [], "Propagate">,
     NegFlag<SetFalse, [], [], "Don't propagate">,
     BothFlags<[], [MC1Option], " the values assigned to read-only variables through binding equations">>,
     Group<MarcoCodegen_Group>;
 
-defm variables_to_parameters_promotion : BoolOption<"", "variables-to-parameters-promotion",
-    MarcoCodegenOpts<"Variable to parameter promotion">,
-    DefaultTrue,
+defm variables_to_parameters_promotion : BoolOptionWithoutMarshalling<"", "variables-to-parameters-promotion",
     PosFlag<SetTrue, [], [], "Promote">,
     NegFlag<SetFalse, [], [], "Don't promote">,
     BothFlags<[], [MC1Option], " variables to parameters when depending only on constants or parameters">>,
     Group<MarcoCodegen_Group>;
 
 def scc_substitution_max_iterations : Joined<["-"], "scc-substitution-max-iter=">,
-    MarcoCodegenOpts<"SCC Solving by substitution">,
     Visibility<[MC1Option]>,
     Group<MarcoCodegen_Group>,
-    MarshallingInfoInt<LangOpts<"ConstexprCallDepth">, "100">,
     HelpText<"Set the maximum number of iterations allowed for each SCC when solving SCCs by substitution">;
 
 def scc_substitution_max_equations : Joined<["-"], "scc-substitution-max-eqs=">,
-    MarcoCodegenOpts<"SCC Solving by substitution">,
     Visibility<[MC1Option]>,
     Group<MarcoCodegen_Group>,
-    MarshallingInfoInt<LangOpts<"ConstexprCallDepth">, "5">,
     HelpText<"Set the maximum number of equations allowed for an SCC to be considered for solving by substitution">;
 
-defm cse : BoolOption<"", "cse",
-    MarcoCodegenOpts<"CSE">,
-    DefaultFalse,
+defm cse : BoolOptionWithoutMarshalling<"", "cse",
     PosFlag<SetTrue, [], [], "Enable">,
     NegFlag<SetFalse, [], [], "Disable">,
     BothFlags<[], [MC1Option], " common subexpression elimination">>,
     Group<MarcoCodegen_Group>;
 
-defm function_calls_cse : BoolOption<"", "function-calls-cse",
-    MarcoCodegenOpts<"CSE">,
-    DefaultFalse,
+defm function_calls_cse : BoolOptionWithoutMarshalling<"", "function-calls-cse",
     PosFlag<SetTrue, [], [], "Enable">,
     NegFlag<SetFalse, [], [], "Disable">,
     BothFlags<[], [MC1Option], " the creation of additional variables for function calls CSE">>,
     Group<MarcoCodegen_Group>;
 
-defm equations_runtime_scheduling : BoolOption<"", "equations-runtime-scheduling",
-    MarcoCodegenOpts<"Equations runtime scheduling">,
-    DefaultFalse,
+defm equations_runtime_scheduling : BoolOptionWithoutMarshalling<"", "equations-runtime-scheduling",
     PosFlag<SetTrue, [], [], "Enable">,
     NegFlag<SetFalse, [], [], "Disable">,
     BothFlags<[], [MC1Option], " equations runtime scheduling">>,
     Group<MarcoCodegen_Group>;
 
-defm omp : BoolOption<"", "omp",
-    MarcoCodegenOpts<"OpenMP">,
-    DefaultFalse,
+defm omp : BoolOptionWithoutMarshalling<"", "omp",
     PosFlag<SetTrue, [], [], "Enable OpenMP usage (experimental)">,
     NegFlag<SetFalse, [], [], "Disable OpenMP usage">,
     BothFlags<[], [MC1Option], "">>,
     Group<MarcoCodegen_Group>;
 
-defm ida_reduced_system : BoolOption<"", "ida-reduced-system",
-    MarcoCodegenOpts<"IDA">,
-    DefaultTrue,
+defm ida_reduced_system : BoolOptionWithoutMarshalling<"", "ida-reduced-system",
     PosFlag<SetTrue, [], [], "IDA: compute a reduced system for the external solver">,
     NegFlag<SetFalse, [], [], "IDA: all variables and equations are passed to the external solver">,
     BothFlags<[], [MC1Option], "">>,
     Group<MarcoCodegen_Group>;
 
-defm ida_reduced_derivatives : BoolOption<"", "ida-reduced-derivatives",
-    MarcoCodegenOpts<"IDA">,
-    DefaultTrue,
+defm ida_reduced_derivatives : BoolOptionWithoutMarshalling<"", "ida-reduced-derivatives",
     PosFlag<SetTrue, [], [], "IDA: determine the derivatives that are always equal to zero">,
     NegFlag<SetFalse, [], [], "IDA: do not determine the derivatives that are always equal to zero">,
     BothFlags<[], [MC1Option], "">>,
     Group<MarcoCodegen_Group>;
 
-defm ida_jacobian_one_sweep : BoolOption<"", "ida-jacobian-one-sweep",
-    MarcoCodegenOpts<"IDA">,
-    DefaultTrue,
+defm ida_jacobian_one_sweep : BoolOptionWithoutMarshalling<"", "ida-jacobian-one-sweep",
     PosFlag<SetTrue, [], [], "IDA: enable one-sweep computation of derivatives with respect to state and derivative variables">,
     NegFlag<SetFalse, [], [], "IDA: disable one-sweep computation of derivatives with respect to state and derivative variables">,
     BothFlags<[], [MC1Option], "">>,
     Group<MarcoCodegen_Group>;
 
 def print_model_info : Flag<["--"], "print-model-info">,
-  Visibility<[MC1Option]>,
-  HelpText<"Print information about the model being compiled">;
+    Visibility<[MC1Option]>,
+    HelpText<"Print information about the model being compiled">;
 
 def print_statistics : Flag<["--"], "print-statistics">,
-  Visibility<[MC1Option]>,
-  HelpText<"Print compilation statistics">;
+    Visibility<[MC1Option]>,
+    HelpText<"Print compilation statistics">;
 
 def print_ir_before_pass : Joined<["--"], "print-ir-before-pass=">,
     Visibility<[MC1Option]>,
@@ -9355,9 +9319,9 @@ def print_ir_after_pass : Joined<["--"], "print-ir-after-pass=">,
     HelpText<"Print the IR after a certain pass">;
 
 def print_ir_on_failure : Flag<["--"], "print-ir-on-failure">,
-  Visibility<[MC1Option]>,
-  HelpText<"Print information about the model being compiled">;
+    Visibility<[MC1Option]>,
+    HelpText<"Print information about the model being compiled">;
 
 def emit_verification_model : Joined<["--"], "emit-verification-model=">,
-  Visibility<[MC1Option]>,
-  HelpText<"Emit an MLIR file to the specified path that can be used to verify the output of the simulation">;
+    Visibility<[MC1Option]>,
+    HelpText<"Emit an MLIR file to the specified path that can be used to verify the output of the simulation">;
