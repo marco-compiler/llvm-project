@@ -9250,6 +9250,11 @@ defm matching_scalarization : BoolOptionWithoutMarshalling<"", "matching-scalari
     BothFlags<[], [MC1Option], " the scalarization of the matching graph">>,
     Group<MarcoCodegen_Group>;
 
+def matching_scalarization_threshold : Joined<["--"], "matching-scalarization-threshold=">,
+    Visibility<[MC1Option]>,
+    Group<MarcoCodegen_Group>,
+    HelpText<"Set the percentage (from 0 to 1) of constant index accesses required before an array variable is converted to scalar variables">;
+
 defm variables_to_parameters_promotion : BoolOptionWithoutMarshalling<"", "variables-to-parameters-promotion",
     PosFlag<SetTrue, [], [], "Promote">,
     NegFlag<SetFalse, [], [], "Don't promote">,
