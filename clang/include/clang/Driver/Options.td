@@ -9244,6 +9244,12 @@ defm read_only_variables_propagation : BoolOptionWithoutMarshalling<"", "read-on
     BothFlags<[], [MC1Option], " the values assigned to read-only variables through binding equations">>,
     Group<MarcoCodegen_Group>;
 
+defm matching_scalarization : BoolOptionWithoutMarshalling<"", "matching-scalarization",
+    PosFlag<SetTrue, [], [], "Enable">,
+    NegFlag<SetFalse, [], [], "Disable">,
+    BothFlags<[], [MC1Option], " the scalarization of the matching graph">>,
+    Group<MarcoCodegen_Group>;
+
 defm variables_to_parameters_promotion : BoolOptionWithoutMarshalling<"", "variables-to-parameters-promotion",
     PosFlag<SetTrue, [], [], "Promote">,
     NegFlag<SetFalse, [], [], "Don't promote">,
