@@ -994,6 +994,12 @@ SymbolTable &SymbolTableCollection::getSymbolTable(Operation *op) {
   return *it.first->second;
 }
 
+void SymbolTableCollection::removeSymbolTable(Operation *op) {
+  if (auto it = symbolTables.find(op); it != symbolTables.end()) {
+    symbolTables.erase(it);
+  }
+}
+
 //===----------------------------------------------------------------------===//
 // LockedSymbolTableCollection
 //===----------------------------------------------------------------------===//

@@ -316,6 +316,8 @@ public:
   /// Lookup, or create, a symbol table for an operation.
   SymbolTable &getSymbolTable(Operation *op);
 
+  void removeSymbolTable(Operation *op);
+
 private:
   friend class LockedSymbolTableCollection;
 
