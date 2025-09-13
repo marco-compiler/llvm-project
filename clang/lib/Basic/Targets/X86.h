@@ -95,10 +95,7 @@ class LLVM_LIBRARY_VISIBILITY X86TargetInfo : public TargetInfo {
   bool HasFMA = false;
   bool HasF16C = false;
   bool HasAVX10_1 = false;
-  bool HasAVX10_1_512 = false;
   bool HasAVX10_2 = false;
-  bool HasAVX10_2_512 = false;
-  bool HasEVEX512 = false;
   bool HasAVX512CD = false;
   bool HasAVX512VPOPCNTDQ = false;
   bool HasAVX512VNNI = false;
@@ -388,7 +385,7 @@ public:
     return CPU != llvm::X86::CK_None;
   }
 
-  uint64_t getFMVPriority(ArrayRef<StringRef> Features) const override;
+  llvm::APInt getFMVPriority(ArrayRef<StringRef> Features) const override;
 
   bool setFPMath(StringRef Name) override;
 
@@ -441,8 +438,9 @@ public:
   uint64_t getPointerAlignV(LangAS AddrSpace) const override {
     return getPointerWidthV(AddrSpace);
   }
-  void adjust(DiagnosticsEngine &Diags, LangOptions &Opts) override {
-    TargetInfo::adjust(Diags, Opts);
+  void adjust(DiagnosticsEngine &Diags, LangOptions &Opts,
+              const TargetInfo *Aux) override {
+    TargetInfo::adjust(Diags, Opts, Aux);
     IsOpenCL = Opts.OpenCL;
   }
 
@@ -647,6 +645,7 @@ public:
   CygwinX86_32TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : X86_32TargetInfo(Triple, Opts) {
     this->WCharType = TargetInfo::UnsignedShort;
+    this->WIntType = TargetInfo::UnsignedInt;
     DoubleAlign = LongLongAlign = 64;
     resetDataLayout("e-m:x-p:32:32-p270:32:32-p271:32:32-p272:64:64-i64:64-"
                     "i128:128-f80:32-n8:16:32-a:0:32-S32",
@@ -838,8 +837,9 @@ public:
     return llvm::IntegerType::MAX_INT_BITS;
   }
 
-  void adjust(DiagnosticsEngine &Diags, LangOptions &Opts) override {
-    TargetInfo::adjust(Diags, Opts);
+  void adjust(DiagnosticsEngine &Diags, LangOptions &Opts,
+              const TargetInfo *Aux) override {
+    TargetInfo::adjust(Diags, Opts, Aux);
     IsOpenCL = Opts.OpenCL;
   }
 
@@ -982,6 +982,7 @@ public:
   CygwinX86_64TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : X86_64TargetInfo(Triple, Opts) {
     this->WCharType = TargetInfo::UnsignedShort;
+    this->WIntType = TargetInfo::UnsignedInt;
   }
 
   void getTargetDefines(const LangOptions &Opts,
@@ -994,6 +995,10 @@ public:
     DefineStd(Builder, "unix", Opts);
     if (Opts.CPlusPlus)
       Builder.defineMacro("_GNU_SOURCE");
+  }
+
+  BuiltinVaListKind getBuiltinVaListKind() const override {
+    return TargetInfo::CharPtrBuiltinVaList;
   }
 };
 

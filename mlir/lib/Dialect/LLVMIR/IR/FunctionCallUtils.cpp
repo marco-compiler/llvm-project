@@ -45,8 +45,11 @@ static constexpr llvm::StringRef kGenericFree = "_mlir_memref_to_llvm_free";
 static constexpr llvm::StringRef kMemRefCopy = "memrefCopy";
 
 namespace {
+/// Search for an LLVMFuncOp with a given name within an operation with the
+/// SymbolTable trait. An optional collection of cached symbol tables can be
+/// given to avoid a linear scan of the symbol table operation.
 LLVM::LLVMFuncOp lookupFuncOp(StringRef name, Operation *symbolTableOp,
-                              SymbolTableCollection *symbolTables) {
+                              SymbolTableCollection *symbolTables = nullptr) {
   if (symbolTables) {
     return symbolTables->lookupSymbolIn<LLVM::LLVMFuncOp>(
         symbolTableOp, StringAttr::get(symbolTableOp->getContext(), name));
@@ -86,8 +89,8 @@ mlir::LLVM::lookupOrCreateFn(OpBuilder &b, Operation *moduleOp, StringRef name,
   OpBuilder::InsertionGuard g(b);
   assert(!moduleOp->getRegion(0).empty() && "expected non-empty region");
   b.setInsertionPointToStart(&moduleOp->getRegion(0).front());
-  auto funcOp = b.create<LLVM::LLVMFuncOp>(
-      moduleOp->getLoc(), name,
+  auto funcOp = LLVM::LLVMFuncOp::create(
+      b, moduleOp->getLoc(), name,
       LLVM::LLVMFunctionType::get(resultType, paramTypes, isVarArg));
 
   if (symbolTables) {
