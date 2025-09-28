@@ -1979,10 +1979,10 @@ def fclang_abi_compat_EQ : Joined<["-"], "fclang-abi-compat=">, Group<f_clang_Gr
 def fclasspath_EQ : Joined<["-"], "fclasspath=">, Group<f_Group>;
 def fcolor_diagnostics : Flag<["-"], "fcolor-diagnostics">, Group<f_Group>,
 
-  Visibility<[ClangOption, CLOption, DXCOption, CC1Option, FlangOption, FC1Option]>,
+  Visibility<[ClangOption, CLOption, DXCOption, CC1Option, FlangOption, FC1Option, MC1Option]>,
   HelpText<"Enable colors in diagnostics">;
 def fno_color_diagnostics : Flag<["-"], "fno-color-diagnostics">, Group<f_Group>,
-  Visibility<[ClangOption, CLOption, DXCOption, FlangOption]>,
+  Visibility<[ClangOption, CLOption, DXCOption, FlangOption, MarcoOption]>,
   HelpText<"Disable colors in diagnostics">;
 def : Flag<["-"], "fdiagnostics-color">, Group<f_Group>,
   Visibility<[ClangOption, CLOption, DXCOption, FlangOption, MarcoOption]>,
