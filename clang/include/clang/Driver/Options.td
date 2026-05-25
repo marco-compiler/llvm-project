@@ -6159,7 +6159,7 @@ def segs__read__write__addr : Separate<["-"], "segs_read_write_addr">;
 def segs__read__ : Joined<["-"], "segs_read_">;
 def shared_libgcc : Flag<["-"], "shared-libgcc">;
 def shared : Flag<["-", "--"], "shared">, Group<Link_Group>,
-  Visibility<[ClangOption, FlangOption]>;
+  Visibility<[ClangOption, FlangOption, MarcoOption]>;
 def single__module : Flag<["-"], "single_module">;
 def specs_EQ : Joined<["-", "--"], "specs=">, Group<Link_Group>;
 def specs : Separate<["-", "--"], "specs">, Flags<[Unsupported]>;
